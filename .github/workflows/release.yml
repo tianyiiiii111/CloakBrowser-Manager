@@ -21,8 +21,19 @@ jobs:
       matrix:
         include:
           - os: macos-latest
-            artifact_glob: "dist/CloakBrowser-Manager-*.dmg"
+            mac_arch: arm64
+            python_arch: arm64
+            artifact_name: dist-macos-arm64
+            artifact_glob: "dist/CloakBrowser-Manager-*-arm64.dmg"
+          - os: macos-latest
+            mac_arch: x86_64
+            python_arch: x64
+            artifact_name: dist-macos-x86_64
+            artifact_glob: "dist/CloakBrowser-Manager-*-x86_64.dmg"
           - os: windows-latest
+            mac_arch: ""
+            python_arch: x64
+            artifact_name: dist-windows
             artifact_glob: "dist/CloakBrowser-Manager-*-Setup.exe"
     runs-on: ${{ matrix.os }}
     outputs:
@@ -56,6 +67,7 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
+          architecture: ${{ matrix.python_arch }}
           cache: pip
           cache-dependency-path: packaging/requirements-desktop.txt
 
@@ -67,9 +79,9 @@ jobs:
           echo "C:/Program Files (x86)/Inno Setup 6" >> "$GITHUB_PATH"
 
       - name: Build (macOS)
-        if: runner.os == 'macOS'
+        if: matrix.mac_arch != ''
         shell: bash
-        run: chmod +x scripts/build-macos.sh && ./scripts/build-macos.sh --all-archs
+        run: chmod +x scripts/build-macos.sh && ./scripts/build-macos.sh --arch ${{ matrix.mac_arch }}
 
       - name: Build (Windows)
         if: runner.os == 'Windows'
@@ -78,7 +90,7 @@ jobs:
 
       - uses: actions/upload-artifact@v4
         with:
-          name: dist-${{ matrix.os }}
+          name: ${{ matrix.artifact_name }}
           path: ${{ matrix.artifact_glob }}
           if-no-files-found: error
 

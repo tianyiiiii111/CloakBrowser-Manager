@@ -21,7 +21,9 @@ chmod +x scripts/build-macos.sh
 | macOS (Intel) | `dist/CloakBrowser-Manager-<版本>-x86_64.dmg` |
 | Windows | `dist/CloakBrowser-Manager-<版本>-Setup.exe` |
 
-本地默认只打本机架构；两个架构都打：`./scripts/build-macos.sh --all-archs`
+本地默认只打本机架构。两个架构都打：`./scripts/build-macos.sh --all-archs`（Apple Silicon 上需 Rosetta，且 x86_64 会使用独立 venv）。
+
+CI 在两个 macOS job 中分别用 `arm64` / `x64` 的 Python 构建，避免交叉编译依赖不兼容。
 
 仅重打安装包：`./scripts/build-macos.sh -p`（单架构）或 `./scripts/build-macos.sh --all-archs -p`；Windows `.\scripts\build-windows.ps1 -PackageOnly`
 

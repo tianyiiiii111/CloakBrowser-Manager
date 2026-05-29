@@ -2,10 +2,10 @@
 # Build macOS distributable (.dmg). Run on macOS only.
 #
 # Usage:
-#   ./scripts/build-macos.sh              # native arch only (arm64 or x86_64)
-#   ./scripts/build-macos.sh --all-archs  # Apple Silicon + Intel DMGs (CI)
+#   ./scripts/build-macos.sh              # native arch only
+#   ./scripts/build-macos.sh --arch arm64|x86_64
+#   ./scripts/build-macos.sh --all-archs  # both (needs x86_64-capable Python via Rosetta on Apple Silicon)
 #   ./scripts/build-macos.sh --package-only
-#   ./scripts/build-macos.sh --arch x86_64
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
@@ -42,6 +42,33 @@ native_arch() {
   esac
 }
 
+python_machine() {
+  "$1" -c 'import platform; print(platform.machine().lower())'
+}
+
+# Run commands with Rosetta when host Python is arm64 but we need an x86_64 venv.
+arch_wrapper() {
+  ARCH_WRAPPER=()
+  local target_arch="$1"
+  local py="$2"
+  local pm
+  pm="$(python_machine "$py")"
+  case "$pm" in
+    arm64) pm=arm64 ;;
+    x86_64|amd64) pm=x86_64 ;;
+    *) echo "Unsupported Python arch: $pm" >&2; return 1 ;;
+  esac
+  if [[ "$target_arch" == "$pm" ]]; then
+    return 0
+  fi
+  if [[ "$(uname -m)" == "arm64" && "$target_arch" == "x86_64" ]]; then
+    ARCH_WRAPPER=(arch -x86_64)
+    return 0
+  fi
+  echo "Python is ${pm} but target arch is ${target_arch}. Install matching Python (CI: setup-python with architecture: x64)." >&2
+  return 1
+}
+
 PYTHON="${PYTHON:-}"
 if command -v python3 &>/dev/null; then PYTHON=python3
 elif command -v python &>/dev/null; then PYTHON=python
@@ -66,16 +93,24 @@ done
 if ! $PACKAGE_ONLY; then
   echo "==> frontend"
   (cd frontend && npm ci && npm run build)
-
-  echo "==> python"
-  [[ -d .venv-build ]] || "$PYTHON" -m venv .venv-build
-  # shellcheck disable=SC1091
-  source .venv-build/bin/activate
-  pip install -q -r packaging/requirements-desktop.txt
 fi
+
+setup_venv() {
+  local arch="$1"
+  local venv=".venv-build-${arch}"
+  ARCH_WRAPPER=()
+  arch_wrapper "$arch" "$PYTHON"
+
+  if [[ ! -d "$venv" ]]; then
+    echo "==> python (${arch})"
+    "${ARCH_WRAPPER[@]}" "$PYTHON" -m venv "$venv"
+  fi
+  "${ARCH_WRAPPER[@]}" "$venv/bin/pip" install -q -r packaging/requirements-desktop.txt
+}
 
 make_dmg() {
   local arch="$1"
+  local venv=".venv-build-${arch}"
   local distpath="dist-${arch}"
   local workpath="build-${arch}"
   local app="${distpath}/CloakBrowser Manager.app"
@@ -83,8 +118,10 @@ make_dmg() {
   local staging="dist/dmg-staging-${arch}"
 
   if ! $PACKAGE_ONLY; then
+    setup_venv "$arch"
     echo "==> pyinstaller (${arch})"
-    PYINSTALLER_TARGET_ARCH="$arch" pyinstaller packaging/cloakbrowser-manager.spec \
+    PYINSTALLER_TARGET_ARCH="$arch" "${ARCH_WRAPPER[@]}" "$venv/bin/pyinstaller" \
+      packaging/cloakbrowser-manager.spec \
       --noconfirm --clean \
       --distpath "$distpath" \
       --workpath "$workpath"
