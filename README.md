@@ -33,7 +33,8 @@ Each profile is an isolated CloakBrowser instance with its own fingerprint, prox
 ```bash
 git clone https://github.com/tianyiiiii111/CloakBrowser-Manager.git
 cd CloakBrowser-Manager
-./scripts/build.sh   # macOS or Windows (Git Bash)
+./scripts/build-macos.sh          # macOS
+# .\scripts\build-windows.ps1     # Windows (PowerShell)
 ```
 
 预编译安装包见 [Releases](https://github.com/tianyiiiii111/CloakBrowser-Manager/releases)（macOS `.dmg`、Windows `Setup.exe`）。

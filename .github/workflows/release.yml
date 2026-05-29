@@ -27,14 +27,12 @@ jobs:
     runs-on: ${{ matrix.os }}
     outputs:
       version: ${{ steps.ver.outputs.version }}
-    defaults:
-      run:
-        shell: bash
     steps:
       - uses: actions/checkout@v4
 
       - name: Set version
         id: ver
+        shell: bash
         run: |
           if [[ "${{ github.ref_type }}" == "tag" ]]; then
             V="${GITHUB_REF_NAME#v}"
@@ -68,8 +66,15 @@ jobs:
           choco install innosetup -y --no-progress
           echo "C:/Program Files (x86)/Inno Setup 6" >> "$GITHUB_PATH"
 
-      - name: Build
-        run: chmod +x scripts/build.sh && ./scripts/build.sh
+      - name: Build (macOS)
+        if: runner.os == 'macOS'
+        shell: bash
+        run: chmod +x scripts/build-macos.sh && ./scripts/build-macos.sh
+
+      - name: Build (Windows)
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: ./scripts/build-windows.ps1
 
       - uses: actions/upload-artifact@v4
         with:

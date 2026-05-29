@@ -2,19 +2,27 @@
 
 ## 本地构建
 
-在 **macOS** 或 **Windows（Git Bash）** 上：
+**macOS：**
 
 ```bash
-chmod +x scripts/build.sh
-./scripts/build.sh
+chmod +x scripts/build-macos.sh
+./scripts/build-macos.sh
 ```
+
+**Windows（PowerShell）：**
+
+```powershell
+.\scripts\build-windows.ps1
+```
+
+也可用 `./scripts/build.sh` 自动选择平台脚本。
 
 | 平台 | 产物 |
 |------|------|
 | macOS | `dist/CloakBrowser-Manager-<版本>.dmg` |
 | Windows | `dist/CloakBrowser-Manager-<版本>-Setup.exe` |
 
-仅重打安装包：`./scripts/build.sh -p`
+仅重打安装包：macOS `./scripts/build-macos.sh -p`；Windows `.\scripts\build-windows.ps1 -PackageOnly`
 
 版本号：修改 `pyproject.toml` 的 `version`。
 
