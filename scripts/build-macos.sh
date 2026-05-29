@@ -47,6 +47,16 @@ python_machine() {
 }
 
 # Run commands with Rosetta when host Python is arm64 but we need an x86_64 venv.
+ARCH_WRAPPER=()
+
+run_wrapped() {
+  if ((${#ARCH_WRAPPER[@]})); then
+    "${ARCH_WRAPPER[@]}" "$@"
+  else
+    "$@"
+  fi
+}
+
 arch_wrapper() {
   ARCH_WRAPPER=()
   local target_arch="$1"
@@ -103,9 +113,9 @@ setup_venv() {
 
   if [[ ! -d "$venv" ]]; then
     echo "==> python (${arch})"
-    "${ARCH_WRAPPER[@]}" "$PYTHON" -m venv "$venv"
+    run_wrapped "$PYTHON" -m venv "$venv"
   fi
-  "${ARCH_WRAPPER[@]}" "$venv/bin/pip" install -q -r packaging/requirements-desktop.txt
+  run_wrapped "$venv/bin/pip" install -q -r packaging/requirements-desktop.txt
 }
 
 make_dmg() {
