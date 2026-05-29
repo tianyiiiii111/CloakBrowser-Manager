@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from typing import Literal
 
-from pydantic import BaseModel, Field, field_validator
+from pydantic import BaseModel, Field
 
 
 class ProfileCreate(BaseModel):
@@ -24,7 +24,6 @@ class ProfileCreate(BaseModel):
     human_preset: Literal["default", "careful"] = "default"
     headless: bool = False
     geoip: bool = False
-    clipboard_sync: bool = True
     auto_launch: bool = False
     color_scheme: Literal["light", "dark", "no-preference"] | None = None
     launch_args: list[str] = Field(default_factory=list)
@@ -44,12 +43,11 @@ class ProfileUpdate(BaseModel):
     screen_height: int | None = None
     gpu_vendor: str | None = Field(default=None)
     gpu_renderer: str | None = Field(default=None)
-    hardware_concurrency: int | None = Field(default=None)
+    hardware_concurrency: int | None = None
     humanize: bool | None = None
     human_preset: Literal["default", "careful"] | None = None
     headless: bool | None = None
     geoip: bool | None = None
-    clipboard_sync: bool | None = None
     auto_launch: bool | None = None
     color_scheme: Literal["light", "dark", "no-preference"] | None = Field(default=None)
     launch_args: list[str] | None = None
@@ -85,14 +83,7 @@ class ProfileResponse(BaseModel):
     human_preset: str = "default"
     headless: bool = False
     geoip: bool = False
-    clipboard_sync: bool = True
     auto_launch: bool = False
-
-    @field_validator("clipboard_sync", mode="before")
-    @classmethod
-    def coerce_clipboard_sync(cls, v: object) -> bool:
-        return v if v is not None else True
-
     color_scheme: str | None = None
     launch_args: list[str] = []
     notes: str | None = None
@@ -101,15 +92,12 @@ class ProfileResponse(BaseModel):
     updated_at: str
     tags: list[TagResponse] = []
     status: str = "stopped"  # "running" | "stopped"
-    vnc_ws_port: int | None = None
     cdp_url: str | None = None
 
 
 class LaunchResponse(BaseModel):
     profile_id: str
     status: str = "running"
-    vnc_ws_port: int
-    display: str
     cdp_url: str | None = None
 
 
@@ -117,17 +105,12 @@ class StatusResponse(BaseModel):
     running_count: int
     binary_version: str
     profiles_total: int
+    native_window_supported: bool = False
 
 
 class ProfileStatusResponse(BaseModel):
     status: str  # "running" | "stopped"
-    vnc_ws_port: int | None = None
-    display: str | None = None
     cdp_url: str | None = None
-
-
-class ClipboardRequest(BaseModel):
-    text: str = Field(max_length=1_048_576)  # 1MB max
 
 
 class LoginRequest(BaseModel):

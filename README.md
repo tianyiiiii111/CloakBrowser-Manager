@@ -11,7 +11,6 @@ Free, self-hosted alternative to Multilogin, GoLogin, and AdsPower.
 
 <p align="center">
 <a href="https://github.com/CloakHQ/CloakBrowser"><img src="https://img.shields.io/github/stars/cloakhq/cloakbrowser?label=CloakBrowser" alt="Stars"></a>
-<a href="https://hub.docker.com/r/cloakhq/cloakbrowser-manager"><img src="https://img.shields.io/docker/pulls/cloakhq/cloakbrowser-manager?label=docker&logo=docker&logoColor=white" alt="Docker Pulls"></a>
 <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue" alt="License"></a>
 </p>
 
@@ -23,23 +22,25 @@ Free, self-hosted alternative to Multilogin, GoLogin, and AdsPower.
 <img src="https://i.imgur.com/XFYn1qY.png" width="800" alt="CloakBrowser Manager — Profile Settings">
 </p>
 
-Each profile is an isolated CloakBrowser instance with its own fingerprint, proxy, cookies, and session data. Profiles persist across restarts. Everything runs in one Docker container.
+Each profile is an isolated CloakBrowser instance with its own fingerprint, proxy, cookies, and session data. Profiles persist across restarts.
+
+## Quick start
+
+**macOS** — install from `CloakBrowser-Manager-<version>.dmg`, or build from source (see [PACKAGING.md](PACKAGING.md)).
+
+**Windows** — install from `CloakBrowser-Manager-<version>-Setup.exe`, or build from source.
 
 ```bash
-docker run -p 8080:8080 -v cloakprofiles:/data cloakhq/cloakbrowser-manager
-```
-
-Or build from source:
-
-```bash
-git clone https://github.com/CloakHQ/CloakBrowser-Manager.git
+git clone https://github.com/tianyiiiii111/CloakBrowser-Manager.git
 cd CloakBrowser-Manager
-docker compose up --build
+./scripts/build.sh   # macOS or Windows (Git Bash)
 ```
 
-Open [http://localhost:8080](http://localhost:8080) in your browser. Create a profile. Click Launch. Done.
+预编译安装包见 [Releases](https://github.com/tianyiiiii111/CloakBrowser-Manager/releases)（macOS `.dmg`、Windows `Setup.exe`）。
 
-> **Early alpha** — this project is under active development. Expect bugs. If you find one, please [open an issue](https://github.com/CloakHQ/CloakBrowser-Manager/issues).
+For local development without packaging, see [DEVELOPMENT.md](DEVELOPMENT.md).
+
+> **Early alpha** — this project is under active development. Expect bugs. If you find one, please [open an issue](https://github.com/tianyiiiii111/CloakBrowser-Manager/issues).
 
 ## Why Not Just Use a VPN?
 
@@ -60,122 +61,64 @@ Each CloakBrowser profile generates a completely different device identity. To t
 - **Per-profile settings** — fingerprint seed, proxy, timezone, locale, user agent, screen size, platform
 - **One-click launch/stop** — each profile runs as an isolated CloakBrowser instance
 - **Session persistence** — cookies, localStorage, and cache survive browser restarts
-- **In-browser viewing** — interact with launched browsers via noVNC, directly in the web GUI
-- **Playwright/Puppeteer API** — connect to any running profile programmatically via CDP, while still watching it live in the browser
-- **Optional authentication** — protect the web UI and API with a single token, or run wide open locally
+- **Native browser windows** — each profile opens in a separate CloakBrowser window (macOS / Windows)
+- **Playwright/Puppeteer API** — connect to any running profile programmatically via CDP
+- **Optional authentication** — protect the UI and API with a single token
 - **Powered by CloakBrowser** — 32 source-level C++ patches, passes Cloudflare Turnstile, 0.9 reCAPTCHA v3 score
 
 ## Stack
 
 - **Backend**: FastAPI (Python)
 - **Frontend**: React + Tailwind CSS
-- **Browser viewer**: noVNC (WebSocket-based VNC client)
-- **Database**: SQLite
+- **Desktop**: PyInstaller + pywebview (macOS `.dmg`, Windows Setup `.exe`)
+- **Database**: SQLite (`~/.cloakbrowser-manager/`)
 - **Browser engine**: [CloakBrowser](https://github.com/CloakHQ/CloakBrowser) (stealth Chromium binary)
-
-## Development
-
-### Backend
-
-```bash
-cd backend
-python -m venv .venv && source .venv/bin/activate
-pip install -r requirements.txt
-uvicorn main:app --reload --port 8080
-```
-
-### Frontend
-
-```bash
-cd frontend
-npm install
-npm run dev
-```
-
-### Docker
-
-```bash
-docker compose up --build
-```
 
 ## Requirements
 
-- Docker (20.10+)
-- ~2 GB disk (image + binary)
+- **macOS** 12+ or **Windows** 10/11
+- ~2 GB disk (app + CloakBrowser binary, downloaded on first launch)
 - ~512 MB RAM per running profile
+- Windows: [WebView2](https://developer.microsoft.com/microsoft-edge/webview2/) (usually preinstalled)
 
-## Updating
+## Development
 
-Pull the latest image and restart:
-
-```bash
-docker pull cloakhq/cloakbrowser-manager
-docker stop <container-id>
-docker run -p 8080:8080 -v cloakprofiles:/data cloakhq/cloakbrowser-manager
-```
-
-Your profiles and session data are stored in the `cloakprofiles` volume and persist across updates.
+See [DEVELOPMENT.md](DEVELOPMENT.md) and [PACKAGING.md](PACKAGING.md).
 
 ## Automation API
 
-Every running profile exposes a CDP (Chrome DevTools Protocol) endpoint. Connect Playwright or Puppeteer to automate a profile while watching it live in the browser.
+Every running profile exposes a CDP (Chrome DevTools Protocol) endpoint. Connect Playwright or Puppeteer to automate a profile while using the native browser window.
 
 ```python
 from playwright.async_api import async_playwright
 
 async with async_playwright() as pw:
     browser = await pw.chromium.connect_over_cdp(
-        "http://localhost:8080/api/profiles/<profile-id>/cdp"
+        "http://127.0.0.1:28765/api/profiles/<profile-id>/cdp"
     )
     page = browser.contexts[0].pages[0]
     await page.goto("https://example.com")
 ```
 
-```javascript
-const { chromium } = require("playwright");
-
-const browser = await chromium.connectOverCDP(
-  "http://localhost:8080/api/profiles/<profile-id>/cdp"
-);
-const page = browser.contexts()[0].pages()[0];
-await page.goto("https://example.com");
-```
-
-The CDP URL is available in the toolbar (code icon) when a profile is running. The same browser session is accessible both visually through VNC and programmatically through the API.
-
-## Remote Access
-
-The container binds to localhost only. To access from a remote server:
-
-```bash
-ssh -L 8080:localhost:8080 your-server
-```
-
-Then open `http://localhost:8080`.
+The CDP URL is shown in the manager UI when a profile is running (port may vary).
 
 ## Authentication
 
-By default, there is no authentication (ideal for local use). To protect the web UI and API when hosting on a network, set the `AUTH_TOKEN` environment variable:
+By default, there is no authentication (ideal for local use). To protect the UI and API, set `AUTH_TOKEN` before starting the app:
 
 ```bash
-docker run -p 8080:8080 -v cloakprofiles:/data -e AUTH_TOKEN=your-secret-token cloakhq/cloakbrowser-manager
-```
-
-Or in `docker-compose.yml`:
-
-```yaml
-environment:
-  - AUTH_TOKEN=your-secret-token
+export AUTH_TOKEN=your-secret-token
+python -m backend.desktop
 ```
 
 When `AUTH_TOKEN` is set:
 
 - The web UI shows a login page. Enter the token to unlock.
 - API consumers pass the token via `Authorization: Bearer <token>` header.
-- VNC WebSocket connections are authenticated via the login cookie.
-- The `/api/status` endpoint remains unauthenticated (for Docker healthcheck).
+- WebSocket connections (CDP proxy) are authenticated via the login cookie.
+- The `/api/status` endpoint remains unauthenticated.
 
-> **Note**: The auth token is transmitted in cleartext over HTTP. If you expose the Manager to the internet, put it behind a reverse proxy with HTTPS (Caddy, nginx, Traefik).
+> **Note**: The auth token is transmitted in cleartext over HTTP. If you expose the Manager on a network, use HTTPS via a reverse proxy.
 
 ## License
 
@@ -192,5 +135,6 @@ Contributions are welcome. Please [open an issue](https://github.com/CloakHQ/Clo
 
 - **CloakBrowser** — [github.com/CloakHQ/CloakBrowser](https://github.com/CloakHQ/CloakBrowser)
 - **Website** — [cloakbrowser.dev](https://cloakbrowser.dev)
-- **Bug reports** — [GitHub Issues](https://github.com/CloakHQ/CloakBrowser-Manager/issues)
+- **Releases** — [github.com/tianyiiiii111/CloakBrowser-Manager/releases](https://github.com/tianyiiiii111/CloakBrowser-Manager/releases)
+- **Bug reports** — [GitHub Issues](https://github.com/tianyiiiii111/CloakBrowser-Manager/issues)
 - **Contact** — cloakhq@pm.me

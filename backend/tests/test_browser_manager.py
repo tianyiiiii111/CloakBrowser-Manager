@@ -16,7 +16,26 @@ from backend.browser_manager import (
     _normalize_proxy,
     _validate_proxy,
     BrowserManager,
+    native_window_available,
 )
+
+
+# ── native_window_available ──────────────────────────────────────────────────
+
+
+def test_native_window_available_macos(monkeypatch):
+    monkeypatch.setattr("backend.browser_manager.sys.platform", "darwin")
+    assert native_window_available() is True
+
+
+def test_native_window_available_windows(monkeypatch):
+    monkeypatch.setattr("backend.browser_manager.sys.platform", "win32")
+    assert native_window_available() is True
+
+
+def test_native_window_unavailable_on_linux(monkeypatch):
+    monkeypatch.setattr("backend.browser_manager.sys.platform", "linux")
+    assert native_window_available() is False
 
 
 # ── _normalize_proxy ─────────────────────────────────────────────────────────
@@ -98,7 +117,6 @@ def test_build_args_always_includes_base():
     args = _mgr._build_fingerprint_args({})
     assert "--disable-infobars" in args
     assert "--test-type" in args
-    assert "--use-angle=swiftshader" in args
 
 
 def test_build_args_seed():
@@ -138,8 +156,7 @@ def test_build_args_screen():
 
 def test_build_args_empty_profile():
     args = _mgr._build_fingerprint_args({})
-    # Only the 3 base args
-    assert len(args) == 3
+    assert len(args) == 2
 
 
 # ── launch_args appended to extra_args ────────────────────────────────────────

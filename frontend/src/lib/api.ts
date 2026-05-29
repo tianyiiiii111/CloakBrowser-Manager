@@ -20,7 +20,6 @@ export interface Profile {
   human_preset: string;
   headless: boolean;
   geoip: boolean;
-  clipboard_sync: boolean;
   auto_launch: boolean;
   color_scheme: string | null;
   launch_args: string[];
@@ -30,7 +29,6 @@ export interface Profile {
   updated_at: string;
   tags: { tag: string; color: string | null }[];
   status: "running" | "stopped";
-  vnc_ws_port: number | null;
   cdp_url: string | null;
 }
 
@@ -51,7 +49,6 @@ export interface ProfileCreateData {
   human_preset?: string;
   headless?: boolean;
   geoip?: boolean;
-  clipboard_sync?: boolean;
   auto_launch?: boolean;
   color_scheme?: string | null;
   launch_args?: string[];
@@ -62,8 +59,6 @@ export interface ProfileCreateData {
 export interface LaunchResult {
   profile_id: string;
   status: string;
-  vnc_ws_port: number;
-  display: string;
   cdp_url: string | null;
 }
 
@@ -71,6 +66,7 @@ export interface SystemStatus {
   running_count: number;
   binary_version: string;
   profiles_total: number;
+  native_window_supported: boolean;
 }
 
 class ApiError extends Error {
@@ -99,7 +95,7 @@ async function request<T>(
   if (!res.ok) {
     if (res.status === 401 && _onUnauthorized) {
       _onUnauthorized();
-      throw new ApiError(401, "Unauthorized");
+      throw new ApiError(401, "未授权");
     }
     const body = await res.json().catch(() => ({ detail: res.statusText }));
     throw new ApiError(res.status, body.detail || res.statusText);
@@ -146,13 +142,4 @@ export const api = {
     request<{ ok: boolean }>(`/api/profiles/${id}/stop`, { method: "POST" }),
 
   getStatus: () => request<SystemStatus>("/api/status"),
-
-  setClipboard: (id: string, text: string) =>
-    request<{ ok: boolean }>(`/api/profiles/${id}/clipboard`, {
-      method: "POST",
-      body: JSON.stringify({ text }),
-    }),
-
-  getClipboard: (id: string) =>
-    request<{ text: string }>(`/api/profiles/${id}/clipboard`),
 };

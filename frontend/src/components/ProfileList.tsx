@@ -10,6 +10,12 @@ interface ProfileListProps {
   onNew: () => void;
 }
 
+const PLATFORM_LABELS: Record<string, string> = {
+  windows: "Windows",
+  macos: "macOS",
+  linux: "Linux",
+};
+
 export function ProfileList({ profiles, selectedId, onSelect, onNew }: ProfileListProps) {
   const [search, setSearch] = useState("");
 
@@ -21,7 +27,6 @@ export function ProfileList({ profiles, selectedId, onSelect, onNew }: ProfileLi
 
   return (
     <div className="flex flex-col h-full">
-      {/* Header */}
       <div className="p-4 border-b border-border">
         <div className="flex items-center gap-2 mb-3">
           <Monitor className="h-4 w-4 text-accent" />
@@ -29,15 +34,14 @@ export function ProfileList({ profiles, selectedId, onSelect, onNew }: ProfileLi
         </div>
         {runningCount > 0 && (
           <div className="text-xs text-gray-500 mb-3">
-            {runningCount} running
+            {runningCount} 个运行中
           </div>
         )}
-        {/* Search */}
         <div className="relative">
           <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-gray-500" />
           <input
             type="text"
-            placeholder="Search profiles..."
+            placeholder="搜索配置..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             className="input pl-8 py-1.5 text-xs"
@@ -45,11 +49,10 @@ export function ProfileList({ profiles, selectedId, onSelect, onNew }: ProfileLi
         </div>
       </div>
 
-      {/* Profile list */}
       <div className="flex-1 overflow-y-auto p-2">
         {filtered.length === 0 && (
           <div className="text-center text-gray-500 text-xs py-8">
-            {profiles.length === 0 ? "No profiles yet" : "No matches"}
+            {profiles.length === 0 ? "暂无配置" : "无匹配结果"}
           </div>
         )}
         {filtered.map((profile) => (
@@ -67,11 +70,13 @@ export function ProfileList({ profiles, selectedId, onSelect, onNew }: ProfileLi
               <span className="text-sm font-medium truncate">{profile.name}</span>
             </div>
             <div className="flex items-center gap-2 mt-1 ml-4">
-              <span className="text-xs text-gray-500 capitalize">{profile.platform}</span>
+              <span className="text-xs text-gray-500">
+                {PLATFORM_LABELS[profile.platform] ?? profile.platform}
+              </span>
               {profile.proxy && (
                 <>
                   <span className="text-xs text-gray-600">·</span>
-                  <span className="text-xs text-gray-500">Proxy</span>
+                  <span className="text-xs text-gray-500">代理</span>
                 </>
               )}
             </div>
@@ -92,11 +97,10 @@ export function ProfileList({ profiles, selectedId, onSelect, onNew }: ProfileLi
         ))}
       </div>
 
-      {/* New profile button */}
       <div className="p-3 border-t border-border">
         <button onClick={onNew} className="btn-secondary w-full flex items-center justify-center gap-1.5">
           <Plus className="h-3.5 w-3.5" />
-          <span>New Profile</span>
+          <span>新建配置</span>
         </button>
       </div>
     </div>

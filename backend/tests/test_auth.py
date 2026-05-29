@@ -19,7 +19,6 @@ def client_no_auth(tmp_db, monkeypatch):
     monkeypatch.setattr(main, "AUTH_TOKEN", None)
     monkeypatch.setattr(main.browser_mgr, "cleanup_stale", AsyncMock())
     monkeypatch.setattr(main.browser_mgr, "cleanup_all", AsyncMock())
-    monkeypatch.setattr(main.browser_mgr.vnc, "cleanup_stale", AsyncMock())
 
     with TestClient(main.app) as client:
         yield client
@@ -33,7 +32,6 @@ def client_auth(tmp_db, monkeypatch):
     monkeypatch.setattr(main, "AUTH_TOKEN", "test-secret")
     monkeypatch.setattr(main.browser_mgr, "cleanup_stale", AsyncMock())
     monkeypatch.setattr(main.browser_mgr, "cleanup_all", AsyncMock())
-    monkeypatch.setattr(main.browser_mgr.vnc, "cleanup_stale", AsyncMock())
 
     with TestClient(main.app) as client:
         yield client
@@ -128,7 +126,7 @@ def test_logout_clears_cookie(client_auth: TestClient):
 
 
 def test_healthcheck_always_accessible(client_auth: TestClient):
-    """GET /api/status must work without auth (Docker healthcheck)."""
+    """GET /api/status must work without auth."""
     resp = client_auth.get("/api/status")
     assert resp.status_code == 200
 

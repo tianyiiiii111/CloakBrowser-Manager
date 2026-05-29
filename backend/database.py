@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import datetime
 import json
+import os
 import random
 import sqlite3
 import uuid
@@ -11,7 +12,9 @@ from contextlib import contextmanager
 from pathlib import Path
 from typing import Any
 
-DATA_DIR = Path("/data")
+DATA_DIR = Path(
+    os.environ.get("DATA_DIR", str(Path.home() / ".cloakbrowser-manager"))
+)
 DB_PATH = DATA_DIR / "profiles.db"
 
 
@@ -25,6 +28,15 @@ def get_db():
         yield conn
     finally:
         conn.close()
+
+
+def _profile_user_data_dir(profile_id: str) -> str:
+    return str(DATA_DIR / "profiles" / profile_id)
+
+
+def _normalize_profile(profile: dict[str, Any]) -> dict[str, Any]:
+    profile["user_data_dir"] = _profile_user_data_dir(profile["id"])
+    return profile
 
 
 def init_db():
@@ -48,6 +60,7 @@ def init_db():
                 humanize BOOLEAN DEFAULT 0,
                 human_preset TEXT DEFAULT 'default',
                 headless BOOLEAN DEFAULT 0,
+                native_window BOOLEAN DEFAULT 0,
                 geoip BOOLEAN DEFAULT 0,
                 clipboard_sync BOOLEAN DEFAULT 1,
                 auto_launch BOOLEAN DEFAULT 0,
@@ -78,6 +91,17 @@ def init_db():
         if "auto_launch" not in cols:
             conn.execute("ALTER TABLE profiles ADD COLUMN auto_launch BOOLEAN DEFAULT 0")
             conn.commit()
+        if "native_window" not in cols:
+            conn.execute("ALTER TABLE profiles ADD COLUMN native_window BOOLEAN DEFAULT 0")
+            conn.commit()
+
+        for row in conn.execute("SELECT id FROM profiles"):
+            expected = _profile_user_data_dir(row["id"])
+            conn.execute(
+                "UPDATE profiles SET user_data_dir = ? WHERE id = ? AND user_data_dir != ?",
+                (expected, row["id"], expected),
+            )
+        conn.commit()
 
 
 def _now() -> str:
@@ -91,7 +115,7 @@ def create_profile(
 ) -> dict[str, Any]:
     profile_id = str(uuid.uuid4())
     seed = fingerprint_seed if fingerprint_seed is not None else random.randint(10000, 99999)
-    user_data_dir = str(DATA_DIR / "profiles" / profile_id)
+    user_data_dir = _profile_user_data_dir(profile_id)
     now = _now()
     tags = fields.pop("tags", None) or []
 
@@ -100,10 +124,10 @@ def create_profile(
             """INSERT INTO profiles (
                 id, name, fingerprint_seed, proxy, timezone, locale, platform,
                 user_agent, screen_width, screen_height, gpu_vendor, gpu_renderer,
-                hardware_concurrency, humanize, human_preset, headless, geoip,
+                hardware_concurrency, humanize, human_preset, headless, native_window, geoip,
                 clipboard_sync, auto_launch, color_scheme, launch_args, notes,
                 user_data_dir, created_at, updated_at
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
             (
                 profile_id, name, seed,
                 fields.get("proxy"),
@@ -119,6 +143,7 @@ def create_profile(
                 fields.get("humanize", False),
                 fields.get("human_preset", "default"),
                 fields.get("headless", False),
+                fields.get("native_window", False),
                 fields.get("geoip", False),
                 fields.get("clipboard_sync", True),
                 fields.get("auto_launch", False),
@@ -143,7 +168,7 @@ def get_profile(profile_id: str) -> dict[str, Any] | None:
         row = conn.execute("SELECT * FROM profiles WHERE id = ?", (profile_id,)).fetchone()
         if not row:
             return None
-        profile = dict(row)
+        profile = _normalize_profile(dict(row))
         profile["launch_args"] = json.loads(profile.get("launch_args") or "[]")
         tags = conn.execute(
             "SELECT tag, color FROM profile_tags WHERE profile_id = ?",
@@ -158,7 +183,7 @@ def list_profiles() -> list[dict[str, Any]]:
         rows = conn.execute("SELECT * FROM profiles ORDER BY created_at DESC").fetchall()
         profiles = []
         for row in rows:
-            profile = dict(row)
+            profile = _normalize_profile(dict(row))
             profile["launch_args"] = json.loads(profile.get("launch_args") or "[]")
             tags = conn.execute(
                 "SELECT tag, color FROM profile_tags WHERE profile_id = ?",
@@ -186,7 +211,7 @@ def update_profile(profile_id: str, **fields: Any) -> dict[str, Any] | None:
     for col in (
         "name", "fingerprint_seed", "proxy", "timezone", "locale", "platform",
         "user_agent", "screen_width", "screen_height", "gpu_vendor", "gpu_renderer",
-        "hardware_concurrency", "humanize", "human_preset", "headless", "geoip",
+        "hardware_concurrency", "humanize", "human_preset", "headless", "native_window", "geoip",
         "clipboard_sync", "auto_launch", "color_scheme", "launch_args", "notes",
     ):
         if col in fields:
