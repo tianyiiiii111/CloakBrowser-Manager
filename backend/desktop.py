@@ -59,6 +59,8 @@ def _start_uvicorn(host: str, port: int) -> tuple[threading.Thread, object]:
         port=port,
         log_level="info",
         access_log=False,
+        # Frozen windowed apps have no TTY; avoid uvicorn DefaultFormatter isatty() crash.
+        use_colors=False if is_frozen() else None,
     )
     server = uvicorn.Server(config)
 
