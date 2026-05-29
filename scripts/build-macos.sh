@@ -46,19 +46,19 @@ python_machine() {
   "$1" -c 'import platform; print(platform.machine().lower())'
 }
 
-# Run commands with Rosetta when host Python is arm64 but we need an x86_64 venv.
-ARCH_WRAPPER=()
+# Run commands under Rosetta when host Python is arm64 but we need an x86_64 venv.
+USE_ROSETTA=false
 
 run_wrapped() {
-  if ((${#ARCH_WRAPPER[@]})); then
-    "${ARCH_WRAPPER[@]}" "$@"
+  if $USE_ROSETTA; then
+    arch -x86_64 "$@"
   else
     "$@"
   fi
 }
 
 arch_wrapper() {
-  ARCH_WRAPPER=()
+  USE_ROSETTA=false
   local target_arch="$1"
   local py="$2"
   local pm
@@ -72,7 +72,7 @@ arch_wrapper() {
     return 0
   fi
   if [[ "$(uname -m)" == "arm64" && "$target_arch" == "x86_64" ]]; then
-    ARCH_WRAPPER=(arch -x86_64)
+    USE_ROSETTA=true
     return 0
   fi
   echo "Python is ${pm} but target arch is ${target_arch}. Install matching Python (CI: setup-python with architecture: x64)." >&2
@@ -108,7 +108,6 @@ fi
 setup_venv() {
   local arch="$1"
   local venv=".venv-build-${arch}"
-  ARCH_WRAPPER=()
   arch_wrapper "$arch" "$PYTHON"
 
   if [[ ! -d "$venv" ]]; then
@@ -130,7 +129,7 @@ make_dmg() {
   if ! $PACKAGE_ONLY; then
     setup_venv "$arch"
     echo "==> pyinstaller (${arch})"
-    PYINSTALLER_TARGET_ARCH="$arch" "${ARCH_WRAPPER[@]}" "$venv/bin/pyinstaller" \
+    PYINSTALLER_TARGET_ARCH="$arch" run_wrapped "$venv/bin/pyinstaller" \
       packaging/cloakbrowser-manager.spec \
       --noconfirm --clean \
       --distpath "$distpath" \
