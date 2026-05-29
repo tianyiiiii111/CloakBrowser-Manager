@@ -83,7 +83,7 @@ export function UpdateButton() {
             </div>
 
             <p className="text-xs text-gray-500 mb-3">
-              当前版本 v{info?.current_version ?? appVersion || "—"}
+              当前版本 v{info?.current_version ?? (appVersion || "—")}
             </p>
 
             {phase === "checking" && (
