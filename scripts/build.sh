@@ -83,7 +83,10 @@ else
   fi
   [[ -n "$ISCC" ]] || { echo "Inno Setup 6 required: https://jrsoftware.org/isinfo.php" >&2; exit 1; }
   echo "==> installer"
-  "$ISCC" packaging/windows/installer.iss "/DMyAppVersion=${VERSION}"
+  # Git Bash converts /D... to a Windows path; invoke via cmd.exe to pass /D defines correctly
+  iss_win="$(cygpath -w "$ROOT/packaging/windows/installer.iss")"
+  iscc_win="$(cygpath -w "$ISCC")"
+  cmd.exe //c "\"${iscc_win}\" /DMyAppVersion=${VERSION} \"${iss_win}\""
   [[ -f "$OUT" ]] || { echo "Build failed: $OUT" >&2; exit 1; }
   echo "=> $OUT"
 fi
