@@ -2,11 +2,11 @@
 <img src="https://i.imgur.com/cqkp6fG.png" width="500" alt="CloakBrowser">
 </p>
 
-<h3 align="center">Browser Profile Manager for CloakBrowser</h3>
+<h3 align="center">CloakBrowser 浏览器配置文件管理器</h3>
 
 <p align="center">
-Create, manage, and launch isolated browser profiles with unique fingerprints.<br>
-Free, self-hosted alternative to Multilogin, GoLogin, and AdsPower.
+创建、管理并启动具有独立指纹的隔离浏览器配置文件。<br>
+免费、可自托管，可作为 Multilogin、GoLogin、AdsPower 的替代方案。
 </p>
 
 <p align="center">
@@ -17,84 +17,84 @@ Free, self-hosted alternative to Multilogin, GoLogin, and AdsPower.
 ---
 
 <p align="center">
-<img src="https://i.imgur.com/twdX81Q.png" width="800" alt="CloakBrowser Manager — Browser View">
+<img src="https://i.imgur.com/twdX81Q.png" width="800" alt="CloakBrowser Manager — 浏览器视图">
 <br>
-<img src="https://i.imgur.com/XFYn1qY.png" width="800" alt="CloakBrowser Manager — Profile Settings">
+<img src="https://i.imgur.com/XFYn1qY.png" width="800" alt="CloakBrowser Manager — 配置文件设置">
 </p>
 
-Each profile is an isolated CloakBrowser instance with its own fingerprint, proxy, cookies, and session data. Profiles persist across restarts.
+每个配置文件都是独立的 CloakBrowser 实例，拥有各自的指纹、代理、Cookie 和会话数据，重启后仍会保留。
 
-## Quick start
+## 快速开始
 
-**macOS** — download the DMG for your Mac from [Releases](https://github.com/tianyiiiii111/CloakBrowser-Manager/releases):
+**macOS** — 从 [Releases](https://github.com/tianyiiiii111/CloakBrowser-Manager/releases) 下载对应芯片的安装包：
 
-| Mac | Installer |
-|-----|-----------|
-| Apple Silicon (M1/M2/M3/M4) | `CloakBrowser-Manager-<version>-arm64.dmg` |
-| Intel (x86_64) | `CloakBrowser-Manager-<version>-x86_64.dmg` |
+| Mac | 安装包 |
+|-----|--------|
+| Apple Silicon（M1/M2/M3/M4） | `CloakBrowser-Manager-<version>-arm64.dmg` |
+| Intel（x86_64） | `CloakBrowser-Manager-<version>-x86_64.dmg` |
 
-**Windows** — install from `CloakBrowser-Manager-<version>-Setup.exe`, or build from source.
+**Windows** — 安装 `CloakBrowser-Manager-<version>-Setup.exe`，或从源码构建。
 
 ```bash
 git clone https://github.com/tianyiiiii111/CloakBrowser-Manager.git
 cd CloakBrowser-Manager
-./scripts/build-macos.sh          # macOS (native arch)
-# ./scripts/build-macos.sh --all-archs   # both arm64 + Intel DMGs
-# .\scripts\build-windows.ps1     # Windows (PowerShell)
+./scripts/build-macos.sh          # macOS（本机架构）
+# ./scripts/build-macos.sh --all-archs   # 同时生成 arm64 + Intel 两个 DMG
+# .\scripts\build-windows.ps1     # Windows（PowerShell）
 ```
 
 预编译安装包见 [Releases](https://github.com/tianyiiiii111/CloakBrowser-Manager/releases)（macOS 两个 `.dmg`、Windows `Setup.exe`）。
 
-For local development without packaging, see [DEVELOPMENT.md](DEVELOPMENT.md).
+不打包、仅本地开发请参阅 [DEVELOPMENT.md](DEVELOPMENT.md)。
 
-> **Early alpha** — this project is under active development. Expect bugs. If you find one, please [open an issue](https://github.com/tianyiiiii111/CloakBrowser-Manager/issues).
+> **早期测试版** — 项目仍在积极开发中，可能存在缺陷。发现问题请 [提交 Issue](https://github.com/tianyiiiii111/CloakBrowser-Manager/issues)。
 
-## Why Not Just Use a VPN?
+## 为什么光用 VPN 不够？
 
-A VPN only changes your IP. Incognito only clears cookies. Chrome profiles share the same hardware fingerprint underneath. Platforms use 50+ signals to link your accounts — canvas, WebGL, audio, GPU, fonts, screen size, timezone.
+VPN 只能改 IP；无痕模式只清 Cookie；Chrome 多配置文件底层仍共享同一硬件指纹。平台会用 50 多种信号关联账号——Canvas、WebGL、音频、GPU、字体、屏幕尺寸、时区等。
 
-Each CloakBrowser profile generates a completely different device identity. To the website, each profile looks like a different computer.
+每个 CloakBrowser 配置文件都会生成完全不同的设备身份，对网站而言就像不同的电脑。
 
-| Solution | What it changes | Accounts linked? |
-|----------|----------------|-----------------|
-| VPN | IP address only | Yes — same fingerprint |
-| Incognito | Clears cookies | Yes — same fingerprint |
-| Chrome profiles | Separate bookmarks/cookies | Yes — same hardware fingerprint |
-| **CloakBrowser** | **Everything — full device identity per profile** | **No** |
+| 方案 | 改变的内容 | 账号会被关联？ |
+|------|------------|----------------|
+| VPN | 仅 IP 地址 | 会 — 指纹相同 |
+| 无痕模式 | 清除 Cookie | 会 — 指纹相同 |
+| Chrome 配置文件 | 独立书签/Cookie | 会 — 硬件指纹相同 |
+| **CloakBrowser** | **全部 — 每个配置文件独立设备身份** | **不会** |
 
-## Features
+## 功能
 
-- **Profile management** — create, edit, delete browser profiles with unique fingerprints
-- **Per-profile settings** — fingerprint seed, proxy, timezone, locale, user agent, screen size, platform
-- **One-click launch/stop** — each profile runs as an isolated CloakBrowser instance
-- **Session persistence** — cookies, localStorage, and cache survive browser restarts
-- **Native browser windows** — each profile opens in a separate CloakBrowser window (macOS / Windows)
-- **Playwright/Puppeteer API** — connect to any running profile programmatically via CDP
-- **Optional authentication** — protect the UI and API with a single token
-- **Powered by CloakBrowser** — 32 source-level C++ patches, passes Cloudflare Turnstile, 0.9 reCAPTCHA v3 score
+- **配置文件管理** — 创建、编辑、删除具有独立指纹的浏览器配置
+- **按配置定制** — 指纹种子、代理、时区、语言、User-Agent、屏幕尺寸、平台等
+- **一键启动/停止** — 每个配置以独立 CloakBrowser 实例运行
+- **会话持久化** — Cookie、localStorage、缓存随浏览器重启保留
+- **原生浏览器窗口** — 每个配置在独立 CloakBrowser 窗口中打开（macOS / Windows）
+- **Playwright/Puppeteer API** — 通过 CDP 以编程方式连接任意运行中的配置
+- **可选鉴权** — 使用单一 Token 保护 UI 与 API
+- **基于 CloakBrowser** — 32 处 C++ 源码级补丁，可通过 Cloudflare Turnstile，reCAPTCHA v3 约 0.9 分
 
-## Stack
+## 技术栈
 
-- **Backend**: FastAPI (Python)
-- **Frontend**: React + Tailwind CSS
-- **Desktop**: PyInstaller + pywebview (macOS `arm64` / `x86_64` `.dmg`, Windows Setup `.exe`)
-- **Database**: SQLite (`~/.cloakbrowser-manager/`)
-- **Browser engine**: [CloakBrowser](https://github.com/CloakHQ/CloakBrowser) (stealth Chromium binary)
+- **后端**：FastAPI（Python）
+- **前端**：React + Tailwind CSS
+- **桌面端**：PyInstaller + pywebview（macOS `arm64` / `x86_64` `.dmg`，Windows Setup `.exe`）
+- **数据库**：SQLite（`~/.cloakbrowser-manager/`）
+- **浏览器引擎**：[CloakBrowser](https://github.com/CloakHQ/CloakBrowser)（隐身 Chromium 二进制）
 
-## Requirements
+## 系统要求
 
-- **macOS** 12+ (Apple Silicon or Intel) or **Windows** 10/11
-- ~2 GB disk (app + CloakBrowser binary, downloaded on first launch)
-- ~512 MB RAM per running profile
-- Windows: [WebView2](https://developer.microsoft.com/microsoft-edge/webview2/) (usually preinstalled)
+- **macOS** 12+（Apple Silicon 或 Intel）或 **Windows** 10/11
+- 约 2 GB 磁盘（应用 + CloakBrowser 二进制，首次启动时下载）
+- 每个运行中的配置约 512 MB 内存
+- Windows：[WebView2](https://developer.microsoft.com/microsoft-edge/webview2/)（通常已预装）
 
-## Development
+## 开发
 
-See [DEVELOPMENT.md](DEVELOPMENT.md) and [PACKAGING.md](PACKAGING.md).
+请参阅 [DEVELOPMENT.md](DEVELOPMENT.md) 与 [PACKAGING.md](PACKAGING.md)。
 
-## Automation API
+## 自动化 API
 
-Every running profile exposes a CDP (Chrome DevTools Protocol) endpoint. Connect Playwright or Puppeteer to automate a profile while using the native browser window.
+每个运行中的配置都会暴露 CDP（Chrome DevTools Protocol）端点。可在使用原生浏览器窗口的同时，用 Playwright 或 Puppeteer 连接并自动化操作。
 
 ```python
 from playwright.async_api import async_playwright
@@ -107,41 +107,41 @@ async with async_playwright() as pw:
     await page.goto("https://example.com")
 ```
 
-The CDP URL is shown in the manager UI when a profile is running (port may vary).
+配置运行后，管理界面会显示 CDP 地址（端口可能不同）。
 
-## Authentication
+## 鉴权
 
-By default, there is no authentication (ideal for local use). To protect the UI and API, set `AUTH_TOKEN` before starting the app:
+默认无需鉴权（适合本地使用）。若要保护 UI 与 API，启动前设置 `AUTH_TOKEN`：
 
 ```bash
 export AUTH_TOKEN=your-secret-token
 python -m backend.desktop
 ```
 
-When `AUTH_TOKEN` is set:
+设置 `AUTH_TOKEN` 后：
 
-- The web UI shows a login page. Enter the token to unlock.
-- API consumers pass the token via `Authorization: Bearer <token>` header.
-- WebSocket connections (CDP proxy) are authenticated via the login cookie.
-- The `/api/status` endpoint remains unauthenticated.
+- Web UI 显示登录页，输入 Token 后解锁。
+- API 调用方通过 `Authorization: Bearer <token>` 请求头传递 Token。
+- WebSocket（CDP 代理）通过登录 Cookie 鉴权。
+- `/api/status` 端点仍无需鉴权。
 
-> **Note**: The auth token is transmitted in cleartext over HTTP. If you expose the Manager on a network, use HTTPS via a reverse proxy.
+> **注意**：Token 经 HTTP 明文传输。若在网络上暴露管理器，请通过反向代理使用 HTTPS。
 
-## License
+## 许可证
 
-- **This application** (GUI source code) — MIT. See [LICENSE](LICENSE).
-- **CloakBrowser binary** (compiled Chromium) — free to use, no redistribution. See [BINARY-LICENSE.md](BINARY-LICENSE.md).
+- **本应用**（GUI 源代码）— MIT，见 [LICENSE](LICENSE)。
+- **CloakBrowser 二进制**（编译后的 Chromium）— 可免费使用，不可再分发，见 [BINARY-LICENSE.md](BINARY-LICENSE.md)。
 
-The GUI application requires the CloakBrowser Chromium binary to function. The binary is automatically downloaded on first launch and is governed by its own license terms. If you fork or redistribute this application, your users must comply with the [CloakBrowser Binary License](BINARY-LICENSE.md).
+GUI 依赖 CloakBrowser Chromium 二进制才能运行；首次启动会自动下载，并受其独立许可条款约束。若 Fork 或再分发本应用，用户须遵守 [CloakBrowser 二进制许可](BINARY-LICENSE.md)。
 
-## Contributing
+## 贡献
 
-Contributions are welcome. Please [open an issue](https://github.com/CloakHQ/CloakBrowser-Manager/issues) first to discuss what you'd like to change.
+欢迎贡献。请先 [提交 Issue](https://github.com/tianyiiiii111/CloakBrowser-Manager/issues) 讨论拟修改内容。
 
-## Links
+## 链接
 
 - **CloakBrowser** — [github.com/CloakHQ/CloakBrowser](https://github.com/CloakHQ/CloakBrowser)
-- **Website** — [cloakbrowser.dev](https://cloakbrowser.dev)
-- **Releases** — [github.com/tianyiiiii111/CloakBrowser-Manager/releases](https://github.com/tianyiiiii111/CloakBrowser-Manager/releases)
-- **Bug reports** — [GitHub Issues](https://github.com/tianyiiiii111/CloakBrowser-Manager/issues)
-- **Contact** — cloakhq@pm.me
+- **官网** — [cloakbrowser.dev](https://cloakbrowser.dev)
+- **发布页** — [github.com/tianyiiiii111/CloakBrowser-Manager/releases](https://github.com/tianyiiiii111/CloakBrowser-Manager/releases)
+- **问题反馈** — [GitHub Issues](https://github.com/tianyiiiii111/CloakBrowser-Manager/issues)
+- **联系** — cloakhq@pm.me
