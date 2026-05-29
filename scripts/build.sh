@@ -83,10 +83,13 @@ else
   fi
   [[ -n "$ISCC" ]] || { echo "Inno Setup 6 required: https://jrsoftware.org/isinfo.php" >&2; exit 1; }
   echo "==> installer"
-  # Git Bash converts /D... to a Windows path; invoke via cmd.exe to pass /D defines correctly
-  iss_win="$(cygpath -w "$ROOT/packaging/windows/installer.iss")"
-  iscc_win="$(cygpath -w "$ISCC")"
-  cmd.exe //c "\"${iscc_win}\" /DMyAppVersion=${VERSION} \"${iss_win}\""
+  # Git Bash MSYS converts /DMyAppVersion=... to a path (second "script" error). Exclude /D* only
+  # so cmd.exe //c still works; direct ISCC call is simpler when /D is excluded.
+  export MSYS2_ARG_CONV_EXCL="${MSYS2_ARG_CONV_EXCL:-/D*}"
+  if ! "$ISCC" "$ROOT/packaging/windows/installer.iss" "/DMyAppVersion=${VERSION}"; then
+    echo "Inno Setup compiler failed" >&2
+    exit 1
+  fi
   [[ -f "$OUT" ]] || { echo "Build failed: $OUT" >&2; exit 1; }
   echo "=> $OUT"
 fi

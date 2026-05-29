@@ -69,8 +69,6 @@ jobs:
           echo "C:/Program Files (x86)/Inno Setup 6" >> "$GITHUB_PATH"
 
       - name: Build
-        env:
-          MSYS2_ARG_CONV_EXCL: "*"
         run: chmod +x scripts/build.sh && ./scripts/build.sh
 
       - uses: actions/upload-artifact@v4
