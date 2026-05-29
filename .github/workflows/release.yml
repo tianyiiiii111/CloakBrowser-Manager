@@ -69,7 +69,7 @@ jobs:
       - name: Build (macOS)
         if: runner.os == 'macOS'
         shell: bash
-        run: chmod +x scripts/build-macos.sh && ./scripts/build-macos.sh
+        run: chmod +x scripts/build-macos.sh && ./scripts/build-macos.sh --all-archs
 
       - name: Build (Windows)
         if: runner.os == 'Windows'

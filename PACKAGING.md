@@ -15,14 +15,15 @@ chmod +x scripts/build-macos.sh
 .\scripts\build-windows.ps1
 ```
 
-也可用 `./scripts/build.sh` 自动选择平台脚本。
-
 | 平台 | 产物 |
 |------|------|
-| macOS | `dist/CloakBrowser-Manager-<版本>.dmg` |
+| macOS (Apple Silicon) | `dist/CloakBrowser-Manager-<版本>-arm64.dmg` |
+| macOS (Intel) | `dist/CloakBrowser-Manager-<版本>-x86_64.dmg` |
 | Windows | `dist/CloakBrowser-Manager-<版本>-Setup.exe` |
 
-仅重打安装包：macOS `./scripts/build-macos.sh -p`；Windows `.\scripts\build-windows.ps1 -PackageOnly`
+本地默认只打本机架构；两个架构都打：`./scripts/build-macos.sh --all-archs`
+
+仅重打安装包：`./scripts/build-macos.sh -p`（单架构）或 `./scripts/build-macos.sh --all-archs -p`；Windows `.\scripts\build-windows.ps1 -PackageOnly`
 
 版本号：修改 `pyproject.toml` 的 `version`。
 
@@ -38,7 +39,8 @@ git push origin v0.1.0
 
 产物：
 
-- `CloakBrowser-Manager-<版本>.dmg`（macOS）
+- `CloakBrowser-Manager-<版本>-arm64.dmg`（macOS Apple Silicon）
+- `CloakBrowser-Manager-<版本>-x86_64.dmg`（macOS Intel）
 - `CloakBrowser-Manager-<版本>-Setup.exe`（Windows）
 
 手动触发（只构建产物、不上传 Release）：在 GitHub → Actions → Release → Run workflow，填写版本号；构建结果在 Workflow Artifacts 中下载。

@@ -13,7 +13,7 @@ python -m backend.desktop
 ## 打包分发（仅 DMG / Setup.exe）
 
 macOS：`./scripts/build-macos.sh`  
-Windows：`.\scripts\build-windows.ps1`（或 `./scripts/build.sh` 自动分发）
+Windows：`.\scripts\build-windows.ps1`
 
 本地构建见 [PACKAGING.md](PACKAGING.md)。发布：`git tag v0.1.0 && git push origin v0.1.0`。
 

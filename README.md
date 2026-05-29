@@ -26,18 +26,24 @@ Each profile is an isolated CloakBrowser instance with its own fingerprint, prox
 
 ## Quick start
 
-**macOS** — install from `CloakBrowser-Manager-<version>.dmg`, or build from source (see [PACKAGING.md](PACKAGING.md)).
+**macOS** — download the DMG for your Mac from [Releases](https://github.com/tianyiiiii111/CloakBrowser-Manager/releases):
+
+| Mac | Installer |
+|-----|-----------|
+| Apple Silicon (M1/M2/M3/M4) | `CloakBrowser-Manager-<version>-arm64.dmg` |
+| Intel (x86_64) | `CloakBrowser-Manager-<version>-x86_64.dmg` |
 
 **Windows** — install from `CloakBrowser-Manager-<version>-Setup.exe`, or build from source.
 
 ```bash
 git clone https://github.com/tianyiiiii111/CloakBrowser-Manager.git
 cd CloakBrowser-Manager
-./scripts/build-macos.sh          # macOS
+./scripts/build-macos.sh          # macOS (native arch)
+# ./scripts/build-macos.sh --all-archs   # both arm64 + Intel DMGs
 # .\scripts\build-windows.ps1     # Windows (PowerShell)
 ```
 
-预编译安装包见 [Releases](https://github.com/tianyiiiii111/CloakBrowser-Manager/releases)（macOS `.dmg`、Windows `Setup.exe`）。
+预编译安装包见 [Releases](https://github.com/tianyiiiii111/CloakBrowser-Manager/releases)（macOS 两个 `.dmg`、Windows `Setup.exe`）。
 
 For local development without packaging, see [DEVELOPMENT.md](DEVELOPMENT.md).
 
@@ -71,13 +77,13 @@ Each CloakBrowser profile generates a completely different device identity. To t
 
 - **Backend**: FastAPI (Python)
 - **Frontend**: React + Tailwind CSS
-- **Desktop**: PyInstaller + pywebview (macOS `.dmg`, Windows Setup `.exe`)
+- **Desktop**: PyInstaller + pywebview (macOS `arm64` / `x86_64` `.dmg`, Windows Setup `.exe`)
 - **Database**: SQLite (`~/.cloakbrowser-manager/`)
 - **Browser engine**: [CloakBrowser](https://github.com/CloakHQ/CloakBrowser) (stealth Chromium binary)
 
 ## Requirements
 
-- **macOS** 12+ or **Windows** 10/11
+- **macOS** 12+ (Apple Silicon or Intel) or **Windows** 10/11
 - ~2 GB disk (app + CloakBrowser binary, downloaded on first launch)
 - ~512 MB RAM per running profile
 - Windows: [WebView2](https://developer.microsoft.com/microsoft-edge/webview2/) (usually preinstalled)
