@@ -185,6 +185,7 @@ def test_system_status(app_client: TestClient):
     assert resp.status_code == 200
     data = resp.json()
     assert data["running_count"] == 0
+    assert "app_version" in data
     assert data["binary_version"] == "0.0.0-test"
     assert data["profiles_total"] >= 1
 

@@ -35,7 +35,11 @@ from .models import (
     ProfileUpdate,
     StatusResponse,
     TagResponse,
+    UpdateApplyResponse,
+    UpdateCheckResponse,
 )
+from .updater import check_for_update, launch_updater_and_exit, prepare_windows_update, update_supported
+from .version import app_version
 
 logger = logging.getLogger("cloakbrowser.manager")
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(name)s %(levelname)s %(message)s")
@@ -374,10 +378,46 @@ async def get_system_status():
     profiles = db.list_profiles()
     return StatusResponse(
         running_count=len(browser_mgr.running),
+        app_version=app_version(),
         binary_version=CHROMIUM_VERSION,
         profiles_total=len(profiles),
         native_window_supported=native_window_available(),
     )
+
+
+# ── App update (Windows portable) ─────────────────────────────────────────────
+
+
+@app.get("/api/update/check", response_model=UpdateCheckResponse)
+async def update_check():
+    data = await check_for_update()
+    return UpdateCheckResponse(**data)
+
+
+@app.post("/api/update/apply", response_model=UpdateApplyResponse)
+async def update_apply():
+    if not update_supported():
+        raise HTTPException(
+            status_code=400,
+            detail="应用内更新仅支持 Windows 便携版。请从发布页下载新版本。",
+        )
+    info = await check_for_update()
+    if not info.get("update_available"):
+        raise HTTPException(status_code=400, detail="已是最新版本")
+    url = info.get("download_url")
+    version = info.get("latest_version")
+    if not url or not version:
+        raise HTTPException(status_code=400, detail="未找到可用的更新包")
+
+    try:
+        await browser_mgr.cleanup_all()
+        updater = await prepare_windows_update(url, version)
+        launch_updater_and_exit(updater)
+    except Exception as exc:
+        logger.exception("Apply update failed")
+        raise HTTPException(status_code=500, detail=f"更新失败：{exc}") from exc
+
+    return UpdateApplyResponse()
 
 
 # ── CDP WebSocket Proxy ──────────────────────────────────────────────────────

@@ -34,7 +34,7 @@ jobs:
             mac_arch: ""
             python_arch: x64
             artifact_name: dist-windows
-            artifact_glob: "dist/CloakBrowser-Manager-*-Setup.exe"
+            artifact_glob: "dist/CloakBrowser-Manager-*-win64.zip"
     runs-on: ${{ matrix.os }}
     outputs:
       version: ${{ steps.ver.outputs.version }}
@@ -71,13 +71,6 @@ jobs:
           cache: pip
           cache-dependency-path: packaging/requirements-desktop.txt
 
-      - name: Install Inno Setup (Windows)
-        if: runner.os == 'Windows'
-        shell: bash
-        run: |
-          choco install innosetup -y --no-progress
-          echo "C:/Program Files (x86)/Inno Setup 6" >> "$GITHUB_PATH"
-
       - name: Build (macOS)
         if: matrix.mac_arch != ''
         shell: bash
@@ -111,6 +104,6 @@ jobs:
           generate_release_notes: true
           files: |
             artifacts/**/*.dmg
-            artifacts/**/*.exe
+            artifacts/**/*.zip
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

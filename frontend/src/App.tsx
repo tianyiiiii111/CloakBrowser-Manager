@@ -8,6 +8,7 @@ import { NativeWindowPanel } from "./components/NativeWindowPanel";
 import { LaunchButton } from "./components/LaunchButton";
 import { StatusIndicator } from "./components/StatusIndicator";
 import { LoginPage } from "./components/LoginPage";
+import { UpdateButton } from "./components/UpdateButton";
 
 type AuthState = "checking" | "required" | "ok" | "error";
 type View = "empty" | "create" | "edit" | "view";
@@ -193,6 +194,7 @@ function AppContent({ authRequired, onLogout }: AppContentProps) {
             )}
           </div>
           <div className="flex items-center gap-2">
+            <UpdateButton />
             {selected && (
               <LaunchButton
                 status={selected.status}

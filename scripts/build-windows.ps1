@@ -1,4 +1,4 @@
-# Build Windows distributable (Setup.exe). Run on Windows (PowerShell).
+# Build Windows portable zip (no installer). Run on Windows (PowerShell).
 # Usage: .\scripts\build-windows.ps1 [-PackageOnly]
 param(
     [switch]$PackageOnly
@@ -41,28 +41,16 @@ if (-not $PackageOnly) {
     if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 }
 
-$Exe = Join-Path $Root 'dist\CloakBrowser Manager\CloakBrowser Manager.exe'
-$Out = Join-Path $Root "dist\CloakBrowser-Manager-$Version-Setup.exe"
+$AppDir = Join-Path $Root 'dist\CloakBrowser Manager'
+$Exe = Join-Path $AppDir 'CloakBrowser Manager.exe'
+$ZipOut = Join-Path $Root "dist\CloakBrowser-Manager-$Version-win64.zip"
+
 if (-not (Test-Path $Exe)) { throw "Missing $Exe" }
 
-$Iscc = $null
-foreach ($candidate in @(
-    "${env:ProgramFiles(x86)}\Inno Setup 6\ISCC.exe",
-    "$env:ProgramFiles\Inno Setup 6\ISCC.exe"
-)) {
-    if (Test-Path $candidate) { $Iscc = $candidate; break }
-}
-if (-not $Iscc) {
-    $cmd = Get-Command ISCC.exe -ErrorAction SilentlyContinue
-    if ($cmd) { $Iscc = $cmd.Source }
-}
-if (-not $Iscc) {
-    throw 'Inno Setup 6 required: https://jrsoftware.org/isinfo.php'
-}
-
-Write-Host '==> installer'
-$Iss = Join-Path $Root 'packaging\windows\installer.iss'
-& $Iscc "/DMyAppVersion=$Version" $Iss
-if ($LASTEXITCODE -ne 0) { throw 'Inno Setup compiler failed' }
-if (-not (Test-Path $Out)) { throw "Build failed: $Out" }
-Write-Host "=> $Out"
+Write-Host '==> portable zip'
+Set-Content -Path (Join-Path $AppDir 'version.txt') -Value $Version -Encoding utf8 -NoNewline
+if (Test-Path $ZipOut) { Remove-Item -Force $ZipOut }
+Compress-Archive -Path $AppDir -DestinationPath $ZipOut -CompressionLevel Optimal
+if (-not (Test-Path $ZipOut)) { throw "Build failed: $ZipOut" }
+Write-Host "=> $ZipOut"
+Write-Host '解压后运行 CloakBrowser Manager.exe（免安装，支持应用内一键更新）'

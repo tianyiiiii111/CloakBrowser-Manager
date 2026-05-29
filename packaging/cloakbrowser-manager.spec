@@ -33,6 +33,8 @@ datas += _pw_datas
 hiddenimports = [
     "backend",
     "backend.frozen_runtime",
+    "backend.version",
+    "backend.updater",
     "backend.main",
     "backend.database",
     "backend.browser_manager",

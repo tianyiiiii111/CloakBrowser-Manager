@@ -103,9 +103,26 @@ class LaunchResponse(BaseModel):
 
 class StatusResponse(BaseModel):
     running_count: int
+    app_version: str
     binary_version: str
     profiles_total: int
     native_window_supported: bool = False
+
+
+class UpdateCheckResponse(BaseModel):
+    current_version: str
+    latest_version: str
+    update_available: bool
+    download_url: str | None = None
+    release_url: str
+    release_notes: str | None = None
+    can_apply_in_app: bool = False
+    asset_name: str | None = None
+
+
+class UpdateApplyResponse(BaseModel):
+    ok: bool = True
+    message: str = "正在更新，应用即将重启…"
 
 
 class ProfileStatusResponse(BaseModel):

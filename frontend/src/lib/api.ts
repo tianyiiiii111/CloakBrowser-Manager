@@ -64,9 +64,21 @@ export interface LaunchResult {
 
 export interface SystemStatus {
   running_count: number;
+  app_version: string;
   binary_version: string;
   profiles_total: number;
   native_window_supported: boolean;
+}
+
+export interface UpdateCheckResult {
+  current_version: string;
+  latest_version: string;
+  update_available: boolean;
+  download_url: string | null;
+  release_url: string;
+  release_notes: string | null;
+  can_apply_in_app: boolean;
+  asset_name: string | null;
 }
 
 class ApiError extends Error {
@@ -142,4 +154,11 @@ export const api = {
     request<{ ok: boolean }>(`/api/profiles/${id}/stop`, { method: "POST" }),
 
   getStatus: () => request<SystemStatus>("/api/status"),
+
+  checkUpdate: () => request<UpdateCheckResult>("/api/update/check"),
+
+  applyUpdate: () =>
+    request<{ ok: boolean; message: string }>("/api/update/apply", {
+      method: "POST",
+    }),
 };
