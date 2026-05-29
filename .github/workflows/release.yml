@@ -63,7 +63,10 @@ jobs:
 
       - name: Install Inno Setup (Windows)
         if: runner.os == 'Windows'
-        run: choco install innosetup -y --no-progress
+        shell: bash
+        run: |
+          choco install innosetup -y --no-progress
+          echo "C:/Program Files (x86)/Inno Setup 6" >> "$GITHUB_PATH"
 
       - name: Build
         run: chmod +x scripts/build.sh && ./scripts/build.sh

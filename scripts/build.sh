@@ -60,13 +60,27 @@ else
   OUT="dist/CloakBrowser-Manager-${VERSION}-Setup.exe"
   [[ -f "$EXE" ]] || { echo "Missing $EXE" >&2; exit 1; }
   ISCC=""
-  for c in \
-    "${PROGRAMFILES(x86):-}/Inno Setup 6/ISCC.exe" \
-    "${PROGRAMFILES:-}/Inno Setup 6/ISCC.exe" \
-    "/c/Program Files (x86)/Inno Setup 6/ISCC.exe" \
-    "/c/Program Files/Inno Setup 6/ISCC.exe"
-  do [[ -f "$c" ]] && ISCC="$c" && break; done
-  [[ -z "$ISCC" ]] && command -v ISCC.exe &>/dev/null && ISCC="$(command -v ISCC.exe)"
+  if command -v ISCC.exe &>/dev/null; then
+    ISCC="$(command -v ISCC.exe)"
+  elif command -v iscc &>/dev/null; then
+    ISCC="$(command -v iscc)"
+  else
+    for c in \
+      "/c/Program Files (x86)/Inno Setup 6/ISCC.exe" \
+      "/c/Program Files/Inno Setup 6/ISCC.exe"
+    do
+      if [[ -f "$c" ]]; then ISCC="$c"; break; fi
+    done
+    if [[ -z "$ISCC" && -n "${PROGRAMFILES:-}" ]]; then
+      c="${PROGRAMFILES}/Inno Setup 6/ISCC.exe"
+      [[ -f "$c" ]] && ISCC="$c"
+    fi
+    if [[ -z "$ISCC" ]]; then
+      pf86="$(cmd.exe //c "echo %PROGRAMFILES(X86)%" 2>/dev/null | tr -d '\r')"
+      c="${pf86}/Inno Setup 6/ISCC.exe"
+      [[ -f "$c" ]] && ISCC="$c"
+    fi
+  fi
   [[ -n "$ISCC" ]] || { echo "Inno Setup 6 required: https://jrsoftware.org/isinfo.php" >&2; exit 1; }
   echo "==> installer"
   "$ISCC" packaging/windows/installer.iss "/DMyAppVersion=${VERSION}"
