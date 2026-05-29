@@ -5,6 +5,8 @@ import os
 import sys
 from pathlib import Path
 
+from PyInstaller.utils.hooks import collect_all
+
 block_cipher = None
 
 # Set by scripts/build-macos.sh: arm64 | x86_64 (PyInstaller disallows --target-arch with .spec)
@@ -25,8 +27,12 @@ if not (frontend_dist / "index.html").is_file():
 
 datas = [(str(frontend_dist), str(Path("frontend") / "dist"))]
 
+_pw_datas, _pw_binaries, _pw_hiddenimports = collect_all("playwright")
+datas += _pw_datas
+
 hiddenimports = [
     "backend",
+    "backend.frozen_runtime",
     "backend.main",
     "backend.database",
     "backend.browser_manager",
@@ -54,12 +60,16 @@ hiddenimports = [
     "webview.platforms.cocoa",
     "webview.platforms.winforms",
     "webview.platforms.edgechromium",
+    "playwright",
+    "playwright.async_api",
+    "playwright._impl",
 ]
+hiddenimports += _pw_hiddenimports
 
 a = Analysis(
     [str(root / "run_desktop.py")],
     pathex=[str(root)],
-    binaries=[],
+    binaries=_pw_binaries,
     datas=datas,
     hiddenimports=hiddenimports,
     hookspath=[],

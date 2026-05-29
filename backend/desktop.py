@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import asyncio
 import logging
 import os
 import socket
@@ -65,6 +66,8 @@ def _start_uvicorn(host: str, port: int) -> tuple[threading.Thread, object]:
     server = uvicorn.Server(config)
 
     def run() -> None:
+        if sys.platform == "win32":
+            asyncio.set_event_loop_policy(asyncio.WindowsProactorEventLoopPolicy())
         server.run()
 
     thread = threading.Thread(target=run, name="uvicorn", daemon=True)

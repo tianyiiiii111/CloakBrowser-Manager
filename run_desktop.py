@@ -7,16 +7,6 @@ import sys
 from pathlib import Path
 
 
-def _ensure_stdio() -> None:
-    """Windowed PyInstaller builds (console=False) set stdout/stderr to None on Windows."""
-    import os
-
-    if sys.stdout is None:
-        sys.stdout = open(os.devnull, "w", encoding="utf-8")  # type: ignore[assignment]
-    if sys.stderr is None:
-        sys.stderr = open(os.devnull, "w", encoding="utf-8")  # type: ignore[assignment]
-
-
 def _bootstrap() -> None:
     if getattr(sys, "frozen", False):
         meipass = Path(getattr(sys, "_MEIPASS"))
@@ -32,7 +22,10 @@ def _bootstrap() -> None:
 
 
 _bootstrap()
-_ensure_stdio()
+
+from backend.frozen_runtime import configure as configure_frozen_runtime  # noqa: E402
+
+configure_frozen_runtime()
 
 from backend.desktop import main  # noqa: E402
 

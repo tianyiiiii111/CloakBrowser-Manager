@@ -25,7 +25,7 @@ from starlette.types import ASGIApp, Receive, Scope, Send
 
 from . import database as db
 from .browser_manager import BrowserManager, native_window_available
-from .paths import frontend_dist_dir
+from .paths import frontend_dist_dir, is_frozen
 from .models import (
     LaunchResponse,
     LoginRequest,
@@ -325,7 +325,7 @@ async def launch_profile(profile_id: str):
     except ValueError as exc:
         raise HTTPException(status_code=400, detail=str(exc))
     except Exception as exc:
-        logger.error("Failed to launch profile %s: %s", profile_id, exc)
+        logger.exception("Failed to launch profile %s", profile_id)
         err = str(exc)
         if "Target page, context or browser has been closed" in err or "SIGTRAP" in err:
             raise HTTPException(
@@ -335,7 +335,10 @@ async def launch_profile(profile_id: str):
                     "Create a new profile, or delete the profile and recreate it."
                 ),
             )
-        raise HTTPException(status_code=500, detail="Failed to launch browser")
+        detail = f"无法启动浏览器：{err}" if err else "无法启动浏览器"
+        if not is_frozen():
+            detail = "Failed to launch browser"
+        raise HTTPException(status_code=500, detail=detail)
 
     return LaunchResponse(
         profile_id=profile_id,
