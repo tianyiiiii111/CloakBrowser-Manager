@@ -1,10 +1,19 @@
 # PyInstaller spec — build on target OS (macOS or Windows).
 # Usage (from repo root): pyinstaller packaging/cloakbrowser-manager.spec --noconfirm
 
+import os
 import sys
 from pathlib import Path
 
 block_cipher = None
+
+# Set by scripts/build-macos.sh: arm64 | x86_64 (PyInstaller disallows --target-arch with .spec)
+_target_arch = os.environ.get("PYINSTALLER_TARGET_ARCH", "").strip() or None
+if _target_arch and sys.platform == "darwin":
+    if _target_arch not in ("arm64", "x86_64"):
+        raise SystemExit(f"Invalid PYINSTALLER_TARGET_ARCH: {_target_arch}")
+elif _target_arch and sys.platform != "darwin":
+    _target_arch = None
 
 # SPECPATH is the packaging/ directory containing this spec file
 root = Path(SPECPATH).resolve().parent
@@ -78,7 +87,7 @@ exe = EXE(
     console=False,
     disable_windowed_traceback=False,
     argv_emulation=False,
-    target_arch=None,
+    target_arch=_target_arch,
     codesign_identity=None,
     entitlements_file=None,
 )

@@ -84,9 +84,8 @@ make_dmg() {
 
   if ! $PACKAGE_ONLY; then
     echo "==> pyinstaller (${arch})"
-    pyinstaller packaging/cloakbrowser-manager.spec \
+    PYINSTALLER_TARGET_ARCH="$arch" pyinstaller packaging/cloakbrowser-manager.spec \
       --noconfirm --clean \
-      --target-arch "$arch" \
       --distpath "$distpath" \
       --workpath "$workpath"
   fi
