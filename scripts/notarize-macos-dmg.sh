@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
-# Notarize and staple a macOS zip (requires Apple Developer credentials).
+# Notarize and staple a macOS DMG (requires Apple Developer credentials).
 set -euo pipefail
 
-ZIP="${1:?usage: notarize-macos-zip.sh /path/to/file.zip}"
+DMG="${1:?usage: notarize-macos-dmg.sh /path/to/file.dmg}"
 
 : "${APPLE_ID:?APPLE_ID is required}"
 : "${APPLE_TEAM_ID:?APPLE_TEAM_ID is required}"
@@ -13,13 +13,13 @@ if [[ -z "${APPLE_APP_SPECIFIC_PASSWORD:-}" && -z "${APPLE_NOTARIZATION_PASSWORD
 fi
 NOTARY_PASSWORD="${APPLE_APP_SPECIFIC_PASSWORD:-$APPLE_NOTARIZATION_PASSWORD}"
 
-echo "==> notarytool submit $(basename "$ZIP")"
-xcrun notarytool submit "$ZIP" \
+echo "==> notarytool submit $(basename "$DMG")"
+xcrun notarytool submit "$DMG" \
   --apple-id "$APPLE_ID" \
   --password "$NOTARY_PASSWORD" \
   --team-id "$APPLE_TEAM_ID" \
   --wait
 
-echo "==> stapler staple $(basename "$ZIP")"
-xcrun stapler staple "$ZIP"
-xcrun stapler validate "$ZIP"
+echo "==> stapler staple $(basename "$DMG")"
+xcrun stapler staple "$DMG"
+xcrun stapler validate "$DMG"

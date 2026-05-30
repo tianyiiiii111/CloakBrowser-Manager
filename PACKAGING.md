@@ -4,15 +4,18 @@
 
 | 平台 | 文件名 | 说明 |
 |------|--------|------|
-| macOS Intel | `CloakBrowser-Manager-<版本>-x86_64.zip` | **免安装便携版**，解压后双击 `.app` 即用 |
+| macOS Intel | `CloakBrowser-Manager-<版本>-x86_64.dmg` | **免安装**：打开 DMG 后双击 `.app` 即用 |
 | Windows | `CloakBrowser-Manager-<版本>-win64.zip` | **免安装便携版**，解压即用 |
 
-macOS zip 内包含：
+Release 页仅发布以上两个文件。
+
+macOS DMG 内包含：
 
 - `CloakBrowser Manager.app` — 主程序
 - `CloakBrowser Manager.command` — 首次若被 Gatekeeper 拦截，可改点此项启动
+- `使用说明.txt`
 
-用户数据与配置保存在 `~/.cloakbrowser-manager/`，与程序解压位置无关。
+用户数据与配置保存在 `~/.cloakbrowser-manager/`，与程序位置无关。
 
 ## 本地构建
 
@@ -22,7 +25,7 @@ macOS zip 内包含：
 chmod +x scripts/build-macos.sh
 ./scripts/build-macos.sh
 
-# 仅重打 zip（需已有 dist-x86_64/）
+# 仅重打 DMG（需已有 dist-x86_64/）
 ./scripts/build-macos.sh -p
 ```
 
@@ -37,7 +40,7 @@ chmod +x scripts/build-macos.sh
 .\scripts\build-windows.ps1 -PackageOnly
 ```
 
-构建流程：前端 `npm ci && build` → Python venv → PyInstaller → 写入 `version.txt` → **codesign** → 打包便携 zip → 可选 **notarize**。
+构建流程：前端 `npm ci && build` → Python venv → PyInstaller → 写入 `version.txt` → **codesign** → 打便携 DMG / zip → 可选 **notarize**（DMG）。
 
 ## macOS 签名与公证
 
@@ -45,15 +48,11 @@ chmod +x scripts/build-macos.sh
 
 **用户侧**（免安装）：
 
-1. 解压 zip 到任意目录（如 `~/Applications/CloakBrowser-Manager/`）
-2. 双击 `CloakBrowser Manager.app`；若被拦截，改点 `CloakBrowser Manager.command`
-3. 或在终端对解压路径执行：
-   ```bash
-   xattr -cr "/path/to/CloakBrowser Manager.app"
-   open "/path/to/CloakBrowser Manager.app"
-   ```
+1. 打开 DMG，直接双击 `CloakBrowser Manager.app`；可将 `.app` 拖到任意文件夹
+2. 若被拦截，改点 `CloakBrowser Manager.command`
+3. 或在终端执行：`xattr -cr "/path/to/CloakBrowser Manager.app"`
 
-**维护者侧**（可选，配置后用户可直接双击 `.app`）：在 GitHub 仓库 Settings → Secrets 添加：
+**维护者侧**（可选）：见下方 Secrets 表，配置后 CI 会签名并公证 DMG。
 
 | Secret | 说明 |
 |--------|------|
@@ -64,18 +63,14 @@ chmod +x scripts/build-macos.sh
 | `APPLE_TEAM_ID` | 10 位 Team ID |
 | `APPLE_APP_SPECIFIC_PASSWORD` | 应用专用密码（用于 notarytool） |
 
-CI 会自动导入证书、签名、公证并 staple zip。
-
 ## 版本号
 
 1. 修改 `pyproject.toml` 中的 `version`
-2. 构建时会在程序目录生成 `version.txt`（应用内更新用于比对）；PyInstaller 也会将版本打入包内
+2. 构建时写入 `version.txt`；PyInstaller 也会将版本打入包内
 3. 发布标签须与版本一致，例如 `version = "0.2.0"` → `git tag v0.2.0`
-4. 更新检测以发布资源文件名中的版本为准（如 `CloakBrowser-Manager-0.2.0-win64.zip`），避免 tag 与资源不一致
+4. 更新检测以资源文件名中的版本为准
 
 ## GitHub Actions 发布
-
-推送 `v*` 标签后自动构建并上传到 [Releases](https://github.com/tianyiiiii111/CloakBrowser-Manager/releases)：
 
 ```bash
 git tag v0.2.0
@@ -84,32 +79,17 @@ git push origin v0.2.0
 
 CI 矩阵：
 
-- `macos-latest`（x64 Python）→ `-x86_64.zip`
+- `macos-latest`（x64 Python）→ `-x86_64.dmg`
 - `windows-latest` → `-win64.zip`
-
-手动触发（不上传 Release）：Actions → Release → Run workflow，产物在 Artifacts 中下载。
 
 ## 应用内更新
 
-对 **PyInstaller 打包后的正式版** 生效：
+| 平台 | 更新包 |
+|------|--------|
+| Windows 便携版 | `*-win64.zip` |
+| macOS Intel 便携版 | `*-x86_64.dmg` |
 
-| 平台 | 条件 | 更新包 |
-|------|------|--------|
-| Windows 便携版 | `version.txt` 在 exe 同目录 | `*-win64.zip` |
-| macOS Intel 便携版 | `.app` 内 `Contents/MacOS/version.txt` | `*-x86_64.zip` |
-
-1. 应用请求 `GET /api/update/check`，从 GitHub Releases 选取带对应平台资源且版本号最高的发布
-2. 用户点击「一键更新并重启」→ `POST /api/update/apply`
-3. 下载 zip → 启动更新脚本 → 本进程退出 → 覆盖当前 `.app` / exe 目录 → 重启
-
-环境变量：
-
-| 变量 | 说明 |
-|------|------|
-| `CBM_UPDATE_REPO` | GitHub 仓库，默认 `tianyiiiii111/CloakBrowser-Manager` |
-| `GITHUB_TOKEN` | 可选，提高 API 限额 |
-
-开发模式（未打包）仅显示版本与发布说明，不能一键安装。
+macOS 更新时下载 DMG、挂载后覆盖当前 `.app` 并重启。
 
 ## 环境要求
 
@@ -118,4 +98,4 @@ CI 矩阵：
 | macOS | Python 3.12+（x86_64）、Node 20+ |
 | Windows | Python 3.12+、Node 20+ |
 
-桌面打包额外依赖见 `packaging/requirements-desktop.txt`（PyInstaller、pywebview 等）。
+桌面打包额外依赖见 `packaging/requirements-desktop.txt`。

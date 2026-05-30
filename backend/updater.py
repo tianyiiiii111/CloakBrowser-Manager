@@ -23,14 +23,14 @@ logger = logging.getLogger("cloakbrowser.manager.updater")
 # Override: CBM_UPDATE_REPO=owner/name
 GITHUB_REPO = os.environ.get("CBM_UPDATE_REPO", "tianyiiiii111/CloakBrowser-Manager")
 ASSET_VERSION_RE = re.compile(
-    r"^CloakBrowser-Manager-(\d+\.\d+\.\d+)-(?:win64|x86_64)\.zip$",
+    r"^CloakBrowser-Manager-(\d+\.\d+\.\d+)-(?:win64\.zip|x86_64\.dmg)$",
     re.IGNORECASE,
 )
 WIN_ZIP_RE = re.compile(
     r"^CloakBrowser-Manager-\d+\.\d+\.\d+-win64\.zip$", re.IGNORECASE
 )
-MAC_ZIP_RE = re.compile(
-    r"^CloakBrowser-Manager-\d+\.\d+\.\d+-x86_64\.zip$", re.IGNORECASE
+MAC_DMG_RE = re.compile(
+    r"^CloakBrowser-Manager-\d+\.\d+\.\d+-x86_64\.dmg$", re.IGNORECASE
 )
 EXE_NAME = "CloakBrowser Manager.exe"
 APP_BUNDLE_NAME = "CloakBrowser Manager.app"
@@ -81,7 +81,7 @@ def _asset_patterns() -> list[re.Pattern[str]]:
     if sys.platform == "win32":
         return [WIN_ZIP_RE]
     if sys.platform == "darwin":
-        return [MAC_ZIP_RE]
+        return [MAC_DMG_RE]
     return []
 
 
@@ -196,15 +196,6 @@ def _find_payload_root(extract_dir: Path) -> Path:
     raise RuntimeError("更新包格式无效：找不到程序目录")
 
 
-def _find_mac_app_bundle(extract_dir: Path) -> Path:
-    direct = extract_dir / APP_BUNDLE_NAME
-    if direct.is_dir():
-        return direct
-    for path in extract_dir.rglob(APP_BUNDLE_NAME):
-        if path.is_dir():
-            return path
-    raise RuntimeError("更新包格式无效：找不到 .app")
-
 
 def _ps_path(path: Path) -> str:
     return str(path.resolve()).replace("'", "''")
@@ -274,39 +265,38 @@ Start-Process -FilePath $exe -WorkingDirectory $dst
 
 
 async def prepare_macos_update(download_url: str, version: str) -> Path:
-    """Download zip and write updater shell script; returns path to apply-update.sh."""
+    """Download DMG and write updater shell script; returns path to apply-update.sh."""
     if not update_supported() or sys.platform != "darwin":
         raise RuntimeError("当前环境不支持 macOS 应用内更新")
 
     work = Path(tempfile.gettempdir()) / "cloakbrowser-manager-update"
     work.mkdir(parents=True, exist_ok=True)
-    zip_path = work / f"update-{version}.zip"
-    extract_dir = work / f"extract-{version}"
+    dmg_path = work / f"update-{version}.dmg"
+    mount_dir = work / f"mount-{version}"
 
-    await download_release_archive(download_url, zip_path)
+    await download_release_archive(download_url, dmg_path)
 
-    if extract_dir.exists():
+    if mount_dir.exists():
         import shutil
 
-        shutil.rmtree(extract_dir)
-    extract_dir.mkdir(parents=True)
+        shutil.rmtree(mount_dir, ignore_errors=True)
+    mount_dir.mkdir(parents=True)
 
-    with zipfile.ZipFile(zip_path, "r") as zf:
-        zf.extractall(extract_dir)
-
-    payload = _find_mac_app_bundle(extract_dir)
     target = mac_app_bundle()
     pid = os.getpid()
     updater = work / "apply-update.sh"
 
-    src = _sh_path(payload)
+    dmg = _sh_path(dmg_path)
+    mount = _sh_path(mount_dir)
     dst = _sh_path(target)
 
     script = f"""#!/bin/bash
 set -euo pipefail
 pid={pid}
-src='{src}'
+dmg='{dmg}'
+mount='{mount}'
 dst='{dst}'
+app_name='{APP_BUNDLE_NAME}'
 
 echo "Waiting for CloakBrowser Manager to exit..."
 for _ in $(seq 1 120); do
@@ -316,6 +306,20 @@ for _ in $(seq 1 120); do
   sleep 1
 done
 sleep 2
+
+cleanup() {{
+  hdiutil detach "$mount" 2>/dev/null || true
+}}
+trap cleanup EXIT
+
+echo "Mounting update image..."
+hdiutil attach "$dmg" -nobrowse -readonly -mountpoint "$mount" >/dev/null
+
+src=$(find "$mount" -maxdepth 2 -name "$app_name" -type d | head -n 1)
+if [[ -z "$src" || ! -d "$src" ]]; then
+  echo "更新包格式无效：找不到 $app_name" >&2
+  exit 1
+fi
 
 echo "Updating $dst ..."
 ditto "$src" "$dst"

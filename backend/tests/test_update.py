@@ -5,9 +5,9 @@ import pytest
 from fastapi.testclient import TestClient
 
 
-def _platform_zip_name(version: str) -> str:
+def _platform_asset_name(version: str) -> str:
     if sys.platform == "darwin":
-        return f"CloakBrowser-Manager-{version}-x86_64.zip"
+        return f"CloakBrowser-Manager-{version}-x86_64.dmg"
     return f"CloakBrowser-Manager-{version}-win64.zip"
 
 
@@ -20,8 +20,8 @@ def release_payload():
         "draft": False,
         "assets": [
             {
-                "name": _platform_zip_name("0.2.0"),
-                "browser_download_url": "https://example.com/app.zip",
+                "name": _platform_asset_name("0.2.0"),
+                "browser_download_url": "https://example.com/app.bin",
             }
         ],
     }
@@ -43,7 +43,7 @@ def test_update_check_newer_available(app_client: TestClient, release_payload):
     data = resp.json()
     assert data["update_available"] is True
     assert data["latest_version"] == "0.2.0"
-    assert data["download_url"] == "https://example.com/app.zip"
+    assert data["download_url"] == "https://example.com/app.bin"
 
 
 def test_update_check_uses_asset_version_over_mismatched_tag(app_client: TestClient):
@@ -54,8 +54,8 @@ def test_update_check_uses_asset_version_over_mismatched_tag(app_client: TestCli
         "draft": False,
         "assets": [
             {
-                "name": _platform_zip_name("0.2.0"),
-                "browser_download_url": "https://example.com/app.zip",
+                "name": _platform_asset_name("0.2.0"),
+                "browser_download_url": "https://example.com/app.bin",
             }
         ],
     }

@@ -39,7 +39,7 @@ cd frontend && npm install && npm run dev
 
 | 平台 | 命令 | 产物 |
 |------|------|------|
-| macOS Intel | `./scripts/build-macos.sh` | `dist/CloakBrowser-Manager-<版本>-x86_64.zip` |
+| macOS Intel | `./scripts/build-macos.sh` | `dist/CloakBrowser-Manager-<版本>-x86_64.dmg` |
 | Windows | `.\scripts\build-windows.ps1` | `dist/CloakBrowser-Manager-<版本>-win64.zip` |
 
 仅重打安装包（跳过 frontend / PyInstaller，需已有 `dist/` 构建结果）：
@@ -55,7 +55,7 @@ cd frontend && npm install && npm run dev
 
 ```bash
 # 1. 修改 pyproject.toml 中的 version
-# 2. 打标签并推送（CI 自动构建 macOS / Windows 便携 zip）
+# 2. 打标签并推送（CI 自动构建 macOS Intel DMG + Windows 便携 zip）
 git tag v0.2.0
 git push origin v0.2.0
 ```

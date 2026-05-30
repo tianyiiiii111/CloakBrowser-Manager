@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Build macOS Intel (x86_64) portable zip. Run on macOS only.
+# Build macOS Intel (x86_64) portable DMG (no install). Run on macOS only.
 #
 # Usage:
 #   ./scripts/build-macos.sh
@@ -86,8 +86,8 @@ fi
 
 distpath="dist-${ARCH}"
 app="${distpath}/CloakBrowser Manager.app"
-zip="dist/CloakBrowser-Manager-${VERSION}-${ARCH}.zip"
-staging="dist/zip-staging-${ARCH}"
+dmg="dist/CloakBrowser-Manager-${VERSION}-${ARCH}.dmg"
+staging="dist/dmg-staging-${ARCH}"
 macos_bin="${app}/Contents/MacOS"
 
 [[ -d "$app" ]] || { echo "Missing $app" >&2; exit 1; }
@@ -98,24 +98,26 @@ echo "==> codesign"
 chmod +x scripts/codesign-macos-app.sh
 ./scripts/codesign-macos-app.sh "$app"
 
-echo "==> portable zip (${ARCH})"
-rm -rf "$staging" "$zip"
+echo "==> portable dmg (${ARCH})"
+rm -rf "$staging" "$dmg"
 mkdir -p "$staging"
 ditto "$app" "$staging/CloakBrowser Manager.app"
 cp packaging/macos-launch.command "$staging/CloakBrowser Manager.command"
 chmod +x "$staging/CloakBrowser Manager.command"
-(
-  cd "$staging"
-  zip -r -y "../$(basename "$zip")" \
-    "CloakBrowser Manager.app" \
-    "CloakBrowser Manager.command"
-)
+cat > "$staging/使用说明.txt" <<'EOF'
+免安装：打开本磁盘映像后，直接双击 CloakBrowser Manager.app 即可运行。
+可将 .app 拖到任意文件夹使用，无需复制到「应用程序」。
+
+若提示「已损坏，无法打开」，请改点 CloakBrowser Manager.command，
+或在终端对 .app 路径执行：xattr -cr "CloakBrowser Manager.app"
+EOF
+hdiutil create -volname "CloakBrowser Manager" -srcfolder "$staging" -ov -format UDZO "$dmg"
 rm -rf "$staging"
-echo "=> $zip"
-echo "解压后双击 CloakBrowser Manager.app 或 CloakBrowser Manager.command（免安装，支持应用内一键更新）"
+echo "=> $dmg"
+echo "打开 DMG 后双击 CloakBrowser Manager.app（免安装，支持应用内一键更新）"
 
 if [[ -n "${APPLE_ID:-}" && -n "${APPLE_TEAM_ID:-}" ]]; then
   echo "==> notarize"
-  chmod +x scripts/notarize-macos-zip.sh
-  ./scripts/notarize-macos-zip.sh "$zip"
+  chmod +x scripts/notarize-macos-dmg.sh
+  ./scripts/notarize-macos-dmg.sh "$dmg"
 fi

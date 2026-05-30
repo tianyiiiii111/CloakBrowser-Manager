@@ -24,7 +24,7 @@ jobs:
             mac_arch: x86_64
             python_arch: x64
             artifact_name: dist-macos-x86_64
-            artifact_glob: "dist/CloakBrowser-Manager-*-x86_64.zip"
+            artifact_glob: "dist/CloakBrowser-Manager-*-x86_64.dmg"
           - os: windows-latest
             mac_arch: ""
             python_arch: x64
@@ -125,5 +125,6 @@ jobs:
           generate_release_notes: true
           files: |
             artifacts/**/*.zip
+            artifacts/**/*.dmg
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
