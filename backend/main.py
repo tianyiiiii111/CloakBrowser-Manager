@@ -38,7 +38,12 @@ from .models import (
     UpdateApplyResponse,
     UpdateCheckResponse,
 )
-from .updater import check_for_update, launch_updater_and_exit, prepare_windows_update, update_supported
+from .updater import (
+    check_for_update,
+    launch_updater_and_exit,
+    prepare_platform_update,
+    update_supported,
+)
 from .version import app_version
 
 logger = logging.getLogger("cloakbrowser.manager")
@@ -385,7 +390,7 @@ async def get_system_status():
     )
 
 
-# ── App update (Windows portable) ─────────────────────────────────────────────
+# ── App update (Windows portable / macOS Intel) ───────────────────────────────
 
 
 @app.get("/api/update/check", response_model=UpdateCheckResponse)
@@ -399,7 +404,7 @@ async def update_apply():
     if not update_supported():
         raise HTTPException(
             status_code=400,
-            detail="应用内更新仅支持 Windows 便携版。请从发布页下载新版本。",
+            detail="应用内更新仅支持 Windows 便携版与 macOS Intel 版。请从发布页下载新版本。",
         )
     info = await check_for_update()
     if not info.get("update_available"):
@@ -411,7 +416,7 @@ async def update_apply():
 
     try:
         await browser_mgr.cleanup_all()
-        updater = await prepare_windows_update(url, version)
+        updater = await prepare_platform_update(url, version)
         launch_updater_and_exit(updater)
     except Exception as exc:
         logger.exception("Apply update failed")

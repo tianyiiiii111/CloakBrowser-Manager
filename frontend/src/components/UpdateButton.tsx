@@ -135,14 +135,19 @@ export function UpdateButton() {
                 )}
 
                 {info.update_available && !info.can_apply_in_app && (
-                  <a
-                    href={info.release_url}
-                    target="_blank"
-                    rel="noreferrer"
-                    className="block text-center text-xs text-amber-400 hover:underline"
-                  >
-                    前往发布页下载
-                  </a>
+                  <div className="text-center space-y-1">
+                    <p className="text-xs text-gray-500">
+                      当前环境不支持一键更新，请从发布页下载安装包。
+                    </p>
+                    <a
+                      href={info.release_url}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="text-xs text-amber-400 hover:underline"
+                    >
+                      打开发布页
+                    </a>
+                  </div>
                 )}
               </>
             )}

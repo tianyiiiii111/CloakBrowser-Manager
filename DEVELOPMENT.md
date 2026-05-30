@@ -39,8 +39,7 @@ cd frontend && npm install && npm run dev
 
 | 平台 | 命令 | 产物 |
 |------|------|------|
-| macOS | `./scripts/build-macos.sh` | `dist/CloakBrowser-Manager-<版本>-<arch>.dmg` |
-| macOS（双架构） | `./scripts/build-macos.sh --all-archs` | arm64 + x86_64 两个 DMG |
+| macOS Intel | `./scripts/build-macos.sh` | `dist/CloakBrowser-Manager-<版本>-x86_64.dmg` + `.zip` |
 | Windows | `.\scripts\build-windows.ps1` | `dist/CloakBrowser-Manager-<版本>-win64.zip` |
 
 仅重打安装包（跳过 frontend / PyInstaller，需已有 `dist/` 构建结果）：
@@ -56,7 +55,7 @@ cd frontend && npm install && npm run dev
 
 ```bash
 # 1. 修改 pyproject.toml 中的 version
-# 2. 打标签并推送（CI 自动构建 macOS DMG + Windows zip）
+# 2. 打标签并推送（CI 自动构建 macOS Intel DMG/zip + Windows zip）
 git tag v0.2.0
 git push origin v0.2.0
 ```
@@ -66,11 +65,11 @@ Windows 发布包须为 `CloakBrowser-Manager-<版本>-win64.zip`，应用内更
 ## 应用内更新（开发说明）
 
 - **API**：`GET /api/update/check`、`POST /api/update/apply`
-- **逻辑**：`backend/updater.py`（仅 Windows 便携版、`sys.frozen` 为真时可一键更新）
-- **版本号**：开发时读 `pyproject.toml`；打包后读 exe 同目录 `version.txt`
+- **逻辑**：`backend/updater.py`（Windows 便携版、macOS Intel 打包版、`sys.frozen` 为真时可一键更新）
+- **版本号**：开发时读 `pyproject.toml`；打包后读 `version.txt`（exe 同目录或 `.app/Contents/MacOS/`）
 - **自定义仓库**：`CBM_UPDATE_REPO=owner/name`
 
-macOS 仅检查更新并跳转发布页，不执行覆盖安装。
+macOS Intel 与 Windows 均支持一键覆盖安装；开发模式或未打包时仅检查版本。
 
 ## 数据目录
 
