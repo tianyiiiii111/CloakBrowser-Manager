@@ -67,12 +67,16 @@ jobs:
           cache-dependency-path: packaging/requirements-desktop.txt
 
       - name: Import macOS signing certificate
-        if: matrix.mac_arch != '' && secrets.MACOS_CERTIFICATE_P12 != ''
+        if: matrix.mac_arch != ''
         env:
           MACOS_CERTIFICATE_P12: ${{ secrets.MACOS_CERTIFICATE_P12 }}
           MACOS_CERTIFICATE_PASSWORD: ${{ secrets.MACOS_CERTIFICATE_PASSWORD }}
         shell: bash
         run: |
+          if [[ -z "${MACOS_CERTIFICATE_P12}" ]]; then
+            echo "MACOS_CERTIFICATE_P12 not configured, skipping code signing import."
+            exit 0
+          fi
           KEYCHAIN=build.keychain-db
           security create-keychain -p temp "$KEYCHAIN"
           security default-keychain -s "$KEYCHAIN"
