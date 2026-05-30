@@ -106,10 +106,9 @@ cp packaging/macos-launch.command "$staging/CloakBrowser Manager.command"
 chmod +x "$staging/CloakBrowser Manager.command"
 (
   cd "$staging"
-  ditto -c -k --sequesterRsrc --keepParent \
+  zip -r -y "../$(basename "$zip")" \
     "CloakBrowser Manager.app" \
-    "CloakBrowser Manager.command" \
-    "../$(basename "$zip")"
+    "CloakBrowser Manager.command"
 )
 rm -rf "$staging"
 echo "=> $zip"
