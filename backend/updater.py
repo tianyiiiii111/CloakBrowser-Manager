@@ -23,7 +23,7 @@ logger = logging.getLogger("cloakbrowser.manager.updater")
 # Override: CBM_UPDATE_REPO=owner/name
 GITHUB_REPO = os.environ.get("CBM_UPDATE_REPO", "tianyiiiii111/CloakBrowser-Manager")
 ASSET_VERSION_RE = re.compile(
-    r"^CloakBrowser-Manager-(\d+\.\d+\.\d+)-(?:win64|x86_64)\.(?:zip|dmg)$",
+    r"^CloakBrowser-Manager-(\d+\.\d+\.\d+)-(?:win64|x86_64)\.zip$",
     re.IGNORECASE,
 )
 WIN_ZIP_RE = re.compile(
