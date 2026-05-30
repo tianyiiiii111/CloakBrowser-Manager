@@ -95,6 +95,10 @@ macos_bin="${app}/Contents/MacOS"
 
 echo "$VERSION" > "${macos_bin}/version.txt"
 
+echo "==> codesign"
+chmod +x scripts/codesign-macos-app.sh
+./scripts/codesign-macos-app.sh "$app"
+
 echo "==> zip (${ARCH}, in-app update)"
 rm -f "$zip"
 ditto -c -k --sequesterRsrc --keepParent "$app" "$zip"
@@ -103,8 +107,27 @@ echo "=> $zip"
 echo "==> dmg (${ARCH})"
 rm -rf "$staging" "$dmg"
 mkdir -p "$staging"
-cp -R "$app" "$staging/"
+ditto "$app" "$staging/CloakBrowser Manager.app"
+cp packaging/macos-install.command "$staging/Install.command"
+chmod +x "$staging/Install.command"
+cat > "$staging/安装说明.txt" <<'EOF'
+若拖入「应用程序」后提示「已损坏，无法打开」，这是 macOS 对未签名应用的安全拦截（并非文件损坏）。
+
+推荐安装方式：
+1. 双击本磁盘中的 Install.command
+2. 若仍被拦截：在「终端」执行
+   xattr -cr "/Applications/CloakBrowser Manager.app"
+   open "/Applications/CloakBrowser Manager.app"
+
+也可右键应用 →「打开」→ 确认打开（仅首次需要）。
+EOF
 ln -sf /Applications "$staging/Applications"
 hdiutil create -volname "CloakBrowser Manager" -srcfolder "$staging" -ov -format UDZO "$dmg"
 rm -rf "$staging"
 echo "=> $dmg"
+
+if [[ -n "${APPLE_ID:-}" && -n "${APPLE_TEAM_ID:-}" ]]; then
+  echo "==> notarize"
+  chmod +x scripts/notarize-macos-dmg.sh
+  ./scripts/notarize-macos-dmg.sh "$dmg"
+fi

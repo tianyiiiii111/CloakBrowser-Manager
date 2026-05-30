@@ -33,7 +33,31 @@ chmod +x scripts/build-macos.sh
 .\scripts\build-windows.ps1 -PackageOnly
 ```
 
-构建流程：前端 `npm ci && build` → Python venv → PyInstaller → 写入 `version.txt` → 生成 zip（Windows / macOS）→ macOS 再打 DMG。
+构建流程：前端 `npm ci && build` → Python venv → PyInstaller → 写入 `version.txt` → **codesign** → 生成 zip → 打 DMG（含 `Install.command`）→ 可选 **notarize**。
+
+## macOS 签名与公证
+
+从 GitHub 下载的未签名应用会被 Gatekeeper 拦截，提示「已损坏，无法打开」（并非文件损坏）。
+
+**用户侧**：DMG 内提供 `Install.command`，会自动 `xattr -cr` 并安装。也可手动执行：
+
+```bash
+xattr -cr "/Applications/CloakBrowser Manager.app"
+open "/Applications/CloakBrowser Manager.app"
+```
+
+**维护者侧**（可选，配置后用户可双击直接打开）：在 GitHub 仓库 Settings → Secrets 添加：
+
+| Secret | 说明 |
+|--------|------|
+| `MACOS_CERTIFICATE_P12` | Developer ID 证书（`.p12`）Base64 |
+| `MACOS_CERTIFICATE_PASSWORD` | 证书密码 |
+| `MACOS_CODESIGN_IDENTITY` | 如 `Developer ID Application: Your Name (TEAMID)` |
+| `APPLE_ID` | Apple ID 邮箱 |
+| `APPLE_TEAM_ID` | 10 位 Team ID |
+| `APPLE_APP_SPECIFIC_PASSWORD` | 应用专用密码（用于 notarytool） |
+
+CI 会自动导入证书、签名、公证并 staple DMG。
 
 输出目录示例：
 

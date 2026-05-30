@@ -26,7 +26,17 @@
 
 ## 快速开始
 
-**macOS Intel** — 从 [Releases](https://github.com/tianyiiiii111/CloakBrowser-Manager/releases) 下载 `CloakBrowser-Manager-<version>-x86_64.dmg`，拖入「应用程序」。安装后右上角可 **一键更新并重启**，无需再去发布页下载。
+**macOS Intel** — 从 [Releases](https://github.com/tianyiiiii111/CloakBrowser-Manager/releases) 下载 `CloakBrowser-Manager-<version>-x86_64.dmg`：
+
+1. 打开 DMG，**双击 `Install.command`** 安装（会自动清除 macOS 隔离属性）
+2. 或拖入「应用程序」后，若提示「已损坏，无法打开」，在终端执行：
+   ```bash
+   xattr -cr "/Applications/CloakBrowser Manager.app"
+   open "/Applications/CloakBrowser Manager.app"
+   ```
+   也可右键应用 →「打开」→ 确认（仅首次需要）。
+
+安装后右上角可 **一键更新并重启**。
 
 **Windows** — 下载并解压 `CloakBrowser-Manager-<version>-win64.zip`（免安装便携版），运行其中的 `CloakBrowser Manager.exe`。右上角可 **一键检查更新**，无需再去发布页下载。
 

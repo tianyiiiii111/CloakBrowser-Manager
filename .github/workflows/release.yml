@@ -68,9 +68,31 @@ jobs:
           cache: pip
           cache-dependency-path: packaging/requirements-desktop.txt
 
+      - name: Import macOS signing certificate
+        if: matrix.mac_arch != '' && secrets.MACOS_CERTIFICATE_P12 != ''
+        env:
+          MACOS_CERTIFICATE_P12: ${{ secrets.MACOS_CERTIFICATE_P12 }}
+          MACOS_CERTIFICATE_PASSWORD: ${{ secrets.MACOS_CERTIFICATE_PASSWORD }}
+        shell: bash
+        run: |
+          KEYCHAIN=build.keychain-db
+          security create-keychain -p temp "$KEYCHAIN"
+          security default-keychain -s "$KEYCHAIN"
+          security unlock-keychain -p temp "$KEYCHAIN"
+          echo "$MACOS_CERTIFICATE_P12" | base64 --decode > cert.p12
+          security import cert.p12 -k "$KEYCHAIN" -P "$MACOS_CERTIFICATE_PASSWORD" \
+            -T /usr/bin/codesign -T /usr/bin/security -T /usr/bin/xcrun
+          security set-key-partition-list -S apple-tool:,apple:,codesign: -s -k temp "$KEYCHAIN"
+          security find-identity -v -p codesigning "$KEYCHAIN"
+
       - name: Build (macOS Intel)
         if: matrix.mac_arch != ''
         shell: bash
+        env:
+          MACOS_CODESIGN_IDENTITY: ${{ secrets.MACOS_CODESIGN_IDENTITY }}
+          APPLE_ID: ${{ secrets.APPLE_ID }}
+          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+          APPLE_APP_SPECIFIC_PASSWORD: ${{ secrets.APPLE_APP_SPECIFIC_PASSWORD }}
         run: chmod +x scripts/build-macos.sh && ./scripts/build-macos.sh
 
       - name: Build (Windows)
